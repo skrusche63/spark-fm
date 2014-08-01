@@ -1,4 +1,22 @@
 package de.kp.spark.fm
+/* Copyright (c) 2014 Dr. Krusche & Partner PartG
+* 
+* This file is part of the Spark-FM project
+* (https://github.com/skrusche63/spark-fm).
+* 
+* Spark-FM is free software: you can redistribute it and/or modify it under the
+* terms of the GNU General Public License as published by the Free Software
+* Foundation, either version 3 of the License, or (at your option) any later
+* version.
+* 
+* Spark-FM is distributed in the hope that it will be useful, but WITHOUT ANY
+* WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+* A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+* You should have received a copy of the GNU General Public License along with
+* Spark-FM. 
+* 
+* If not, see <http://www.gnu.org/licenses/>.
+*/
 
 object DenseMatrix {
   
@@ -20,28 +38,6 @@ object DenseMatrix {
   }
   
   def zeros(rdim: Int, cdim: Int) = new DenseMatrix(rdim, cdim)
-
-  //def ones(length: Int) = Vector(length, _ => 1)
-
-//  /**
-//   * Creates this [[org.apache.spark.util.Vector]] of given length containing random numbers 
-//   * between 0.0 and 1.0. Optional scala.util.Random number generator can be provided.
-//   */
-//  def random(length: Int, random: Random = new XORShiftRandom()) =
-//    Vector(length, _ => random.nextDouble())
-//
-//  class Multiplier(num: Double) {
-//    def * (vec: Vector) = vec * num
-//  }
-
-//  implicit def doubleToMultiplier(num: Double) = new Multiplier(num)
-
-//  implicit object MatrixAccumParam extends org.apache.spark.AccumulatorParam[FMMatrix] {
-//    def addInPlace(t1: FMMatrix, t2: FMMatrix) = t1 + t2
-//
-//    def zero(initialValue: FMMatrix) = FMMatrix.zeros(initialValue.rdim, initialValue.cdim)
-//    
-//  }
 
 }
 
