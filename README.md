@@ -16,7 +16,11 @@ Matrix factorization (MF) approaches to recommendations have become very popular
 
 The most approaches to take contextual information into account focus on contextual pre- or post-filtering where a standard context-unaware technique, such as MF is applied to the filter data.
 
-New approaches extend the 2-dimensional space (user,item,rating) `R: U x I -> R` to an N-dimensional space (user,item,context1,context2,...,rating) `R: U x I x C1 x C2 x ... -> R`, and thus extend matrix factorization approaches to tensor factorization ones. 
+New approaches extend the 2-dimensional space (user,item,rating) `R: U x I -> R` to an n-dimensional space (user,item,c1,c2,...,rating) `R: U x I x C1 x C2 x ... -> R`, where *c1*, *c2* etc describe contextual dimensions. These approaches extend matrix models (MF) to tensor models (TF).
+
+Recently a recommendation approach, called *Multiverse Recommendation*, as been proposed that uses Tucker decomposition to factorize these n-dimensional tensor models. However, a drawback of this approach is its computational complexity.
+
+Therefore, we suggest to build a context-aware recommender system on Factorization Machines (FM), recently introduced by Steffen Rendle. This approach results in fast context-aware recommendations as the model equation of FMs can be computed in linear time both in the number of contextual parameters and the selected factorization size.
 
 
 ## Factorization Machines in Spark
