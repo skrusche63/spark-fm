@@ -35,32 +35,14 @@ object FM {
      * 
      * Partition dataset
      */
-    val lines = buildRandomPartitions(sc,dataset,num_partitions)
-    
+    val partitionedDS = Partitioner.buildRandomPartitions(sc,dataset,num_partitions)
+        
     /**
      * STEP #2
      * 
-     * Convert lines partitions and targeted points; a targeted point
-     * describes a target value associated with a feature vector
-     */
-    val database = lines.map(valu => {
-
-      val (partition, line) = valu
-      val parts = line.split(',')
-      
-      val target = parts(0).toDouble
-      val features = extractFeatures(parts(1).trim().split(' ').map(_.toDouble))
-
-      (partition,(target,features))
-      
-    })
-    
-    /**
-     * STEP #3
-     * 
      * Calculate model per partition
      */
-    val polynom = database.groupByKey().map(valu => {
+    val polynom = partitionedDS.groupByKey().map(valu => {
       
       val algo = new PolySGD(args)
       val num_iter = args("num_iter").toInt
@@ -89,7 +71,7 @@ object FM {
     })
     
     /**
-     * STEP #4
+     * STEP #3
      * 
      * Build mean values
      */    
@@ -102,23 +84,6 @@ object FM {
     val mean_m = raw.map(valu => valu._4).reduceLeft(_ + _) * scale
     
     (mean_c, mean_v, mean_m)
-    
-  }
-
-  /**
-   * Read data from file and use a simple mechanism to partition 
-   * input data into a set of almost equal sized datasets
-   */  
-  def buildRandomPartitions(sc:SparkContext,input:String,num_partitions:Int):RDD[(Int,String)] = {
-    
-    val file = sc.textFile(input).map(line => {
-    
-      val ix = new java.util.Random().nextInt(num_partitions)
-      (ix,line)
-    
-    })
-    
-    file.partitionBy(new RangePartitioner(num_partitions,file))
     
   }
   
