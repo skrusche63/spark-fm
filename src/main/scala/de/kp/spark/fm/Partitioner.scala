@@ -18,7 +18,7 @@ package de.kp.spark.fm
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.{RangePartitioner,SparkContext}
+import org.apache.spark._
 import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
@@ -66,11 +66,19 @@ object Partitioner {
       (cluster,(target,buildSparseVector(features)))
       
     })
+    
+    val partitioner = new Partitioner() {
+      
+      def numPartitions = clusters
+      def getPartition(key: Any) = key.asInstanceOf[Int]
+      
+    }
+    
     /**
      * Used to define how the elements in a key/value pair RDD are partitioned by key. 
      * Each key is mapped to a partition ID, which is an Int within 0 until numPartitions
      */   
-    clusteredDS.partitionBy(new RangePartitioner(clusters,clusteredDS))
+    clusteredDS.partitionBy(partitioner)
     
   }
 
@@ -93,7 +101,14 @@ object Partitioner {
    
     })
     
-    randomizedDS.partitionBy(new RangePartitioner(num_partitions,randomizedDS))
+    val partitioner = new Partitioner() {
+      
+      def numPartitions = num_partitions
+      def getPartition(key: Any) = key.asInstanceOf[Int]
+      
+    }
+    
+    randomizedDS.partitionBy(partitioner)
     
   }
 
