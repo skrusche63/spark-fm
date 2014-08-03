@@ -18,7 +18,7 @@ package de.kp.spark.fm
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.{RangePartitioner,SparkConf,SparkContext}
+import org.apache.spark.{SparkConf,SparkContext}
 import org.apache.spark.SparkContext._
 
 import org.apache.spark.serializer.KryoSerializer
