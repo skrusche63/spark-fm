@@ -58,7 +58,7 @@ object ExampleApp {
     /**
      * Train polynom (model)
      */
-    val (c,v,m) = FM.train(sc,args)
+    val (c,v,m) = FM.trainFromFile(sc,args)
 
     /**
      * Determine error

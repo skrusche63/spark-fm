@@ -19,6 +19,7 @@
     <encoding>UTF-8</encoding>
     <scala.tools.version>2.10</scala.tools.version>
     <scala.version>2.10.0</scala.version>
+    <spark.version>1.1.0</spark.version>
   </properties>
 
   <dependencies>
@@ -52,14 +53,14 @@
     <dependency>
 	  <groupId>org.apache.spark</groupId>
 	  <artifactId>spark-core_2.10</artifactId>
-	  <version>1.1.0</version>
+	  <version>${spark.version}</version>
     </dependency>
     
-    <!-- spark mllib 1.0.1 -->
+    <!-- spark mllib 1.1.0 -->
     <dependency>
 	  <groupId>org.apache.spark</groupId>
 	  <artifactId>spark-mllib_2.10</artifactId>
-	  <version>1.1.0</version>
+	  <version>${spark.version}</version>
     </dependency>
     
     <!-- json4s -->
@@ -86,6 +87,13 @@
 	  <groupId>com.typesafe.akka</groupId>
 	  <artifactId>akka-remote_2.10</artifactId>
 	  <version>2.2.3</version>
+    </dependency>
+    
+    <!-- jedis 2.5.2 -->
+    <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>2.5.2</version>
     </dependency>
     
   </dependencies>

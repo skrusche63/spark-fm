@@ -23,31 +23,32 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-object FM {
+import de.kp.spark.fm.source.FileSource
 
-  def train(sc:SparkContext, args:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
+object FM extends Serializable {
 
-    val dataset = args("dataset")
-    val num_partitions = args("num_partitions").toInt
+  def trainFromFile(@transient sc:SparkContext,params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
     
+    val dataset = new FileSource(sc).connect(params)
+    trainFromRDD(dataset,params)
+    
+  }
+  
+  def trainFromRDD(dataset:RDD[(Int,(Double,SparseVector))],params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
+    
+    val num_partitions = params("num_partitions").toInt
+        
     /**
      * STEP #1
      * 
-     * Partition dataset
-     */
-    val partitionedDS = Partitioner.buildRandomPartitions(sc,dataset,num_partitions)
-        
-    /**
-     * STEP #2
-     * 
      * Calculate model per partition
      */
-    val polynom = partitionedDS.groupByKey().map(valu => {
+    val polynom = dataset.groupByKey().map(valu => {
       
-      val algo = new PolySGD(args)
-      val num_iter = args("num_iter").toInt
+      val algo = new PolySGD(params)
+      val num_iter = params("num_iter").toInt
       
-      var (c,v,m) = getPolynom(args)
+      var (c,v,m) = getPolynom(params)
       
       val (partition,data) = valu      
       for (iter <- 0 until 20) {
@@ -71,7 +72,7 @@ object FM {
     })
     
     /**
-     * STEP #3
+     * STEP #2
      * 
      * Build mean values
      */    

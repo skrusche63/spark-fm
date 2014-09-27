@@ -1,4 +1,4 @@
-package de.kp.spark.arules.actor
+package de.kp.spark.fm.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project

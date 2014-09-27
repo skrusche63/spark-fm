@@ -33,6 +33,7 @@ import scala.concurrent.duration.DurationInt
 class FMBuilder extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
+  private val sources = Array(Sources.FILE)
   
   def receive = {
 
@@ -125,11 +126,11 @@ class FMBuilder extends Actor with ActorLogging {
         return Some(Messages.NO_SOURCE_PROVIDED(uid))       
       }
         
-//      case Some(source) => {
-//        if (sources.contains(source) == false) {
-//          return Some(Messages.SOURCE_IS_UNKNOWN(uid,source))    
-//        }          
-//      }
+      case Some(source) => {
+        if (sources.contains(source) == false) {
+          return Some(Messages.SOURCE_IS_UNKNOWN(uid,source))    
+        }          
+      }
         
     }
 
@@ -138,9 +139,7 @@ class FMBuilder extends Actor with ActorLogging {
   }
 
   private def actor(req:ServiceRequest):ActorRef = {
-
-    null
-  
+     context.actorOf(Props(new FMActor()))
   }
 
   private def failure(req:ServiceRequest,message:String):ServiceResponse = {

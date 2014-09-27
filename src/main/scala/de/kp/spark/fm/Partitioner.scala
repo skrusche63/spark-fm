@@ -26,14 +26,14 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.clustering.KMeans
 import org.apache.spark.mllib.linalg.{Vector,Vectors}
 
-object Partitioner {
+object Partitioner extends Serializable {
 
   /**
    * Read data from file and use K-Means algorithm to cluster
    * the raw dataset into a number of clusters, where each
    * cluster represents similiar data
    */  
-  def buildKMeansPartitions(sc:SparkContext,input:String,clusters:Int,iterations:Int):RDD[(Int,(Double,SparseVector))] = {
+  def buildKMeansPartitions(@transient sc:SparkContext,input:String,clusters:Int,iterations:Int):RDD[(Int,(Double,SparseVector))] = {
     
     /**
      * Read dataset
@@ -86,7 +86,7 @@ object Partitioner {
    * Read data from file and use a simple mechanism to partition 
    * input data into a set of almost equal sized datasets
    */  
-  def buildRandomPartitions(sc:SparkContext,input:String,num_partitions:Int):RDD[(Int,(Double,SparseVector))] = {
+  def buildRandomPartitions(@transient sc:SparkContext,input:String,num_partitions:Int):RDD[(Int,(Double,SparseVector))] = {
     
     val randomizedDS = sc.textFile(input).map(line => {
     

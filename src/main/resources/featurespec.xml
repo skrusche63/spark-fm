@@ -1,0 +1,8 @@
+<fieldspec>
+	<field type="Label">label</field>
+	<field type="Feature">feature</field>
+	<field type="Feature">feature</field>
+    <field type="Feature">feature</field>	
+    <field type="Feature">feature</field>	
+    <field type="Feature">feature</field>
+</fieldspec>

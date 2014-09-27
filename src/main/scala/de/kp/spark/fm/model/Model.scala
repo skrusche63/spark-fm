@@ -68,6 +68,8 @@ object Sources {
 }
 
 object Messages {
+  
+  def FM_BUILDING_STARTED(uid:String):String = String.format("""FM building started for uid '%s'.""", uid)
 
   def GENERAL_ERROR(uid:String):String = String.format("""A general error appeared for uid '%s'.""", uid)
 

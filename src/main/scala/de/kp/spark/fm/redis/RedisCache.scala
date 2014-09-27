@@ -19,13 +19,31 @@ package de.kp.spark.fm.redis
 */
 
 import java.util.Date
+
+import de.kp.spark.fm.model._
 import scala.collection.JavaConversions._
 
 object RedisCache {
+
+  val client  = RedisClient()
+  val service = "arules"
+  
+  def addStatus(uid:String, task:String, status:String) {
+   
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "job:" + service + ":" + uid
+    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(service,task,status))
+    
+    client.zadd(k,timestamp,v)
+    
+  }
   
   def taskExists(uid:String):Boolean = {
 
-    false
+    val k = "job:" + service + ":" + uid
+    client.exists(k)
     
   }
   
@@ -34,14 +52,36 @@ object RedisCache {
    */
   def starttime(uid:String):Long = {
     
-    0
+    val k = "job:" + service + ":" + uid
+    val jobs = client.zrange(k, 0, -1)
+
+    if (jobs.size() == 0) {
+      0
+    
+    } else {
+      
+      val first = jobs.iterator().next()
+      first.split(":")(0).toLong
+      
+    }
      
   }
   
   def status(uid:String):String = {
+
+    val k = "job:" + service + ":" + uid
+    val jobs = client.zrange(k, 0, -1)
+
+    if (jobs.size() == 0) {
+      null
     
-    null
-    
+    } else {
+      
+      val job = Serializer.deserializeJob(jobs.toList.last)
+      job.status
+      
+    }
+
   }
 
 }
