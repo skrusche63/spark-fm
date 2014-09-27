@@ -1,6 +1,6 @@
 ![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
 
-## Context-Aware Recommendations (CARS)
+## Context-Aware Recommendations
 
 Recommender systems are an important feature of modern websites. Especially commercial sites benefit from a boost in customer loyalty, click-through rates and revenues when using recommender systems.
 
