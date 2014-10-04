@@ -2,7 +2,11 @@
 
 ## Reactive Factorization Engine
 
-### Context-Aware Recommendations
+### Use Cases
+
+Factorization machines are multi-purpose predictors that are applicable to many different application areas. Below we describe some selected uses cases that we think are of common interest, and we certainly do not claim that the list of use cases is complete.
+
+##### Context-Aware Recommendations
 
 Recommender systems are an important feature of modern websites. Especially commercial sites benefit from a boost in customer loyalty, click-through rates and revenues when using recommender systems.
 
@@ -11,6 +15,8 @@ The majority of existing approaches to recommender systems focus on recommending
 For personalized recommendations, however, it is not sufficient to consider only *users* and their engagement on a set of *items*. It is important to incorporate contextual information in order to recommend items to users *under certain circumstances*, and make those recommendations more personalized.
 
 > For example, using a temporal context, a travel recommender system would provide vacation recommendations in the winter, that can be very different from those in the summer.
+
+##### Semantic Concept Prediction
 
 ### Factorization Machines
 
