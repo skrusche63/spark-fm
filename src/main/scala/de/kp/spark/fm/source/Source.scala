@@ -26,6 +26,6 @@ import de.kp.spark.fm.SparseVector
 
 abstract class Source(@transient sc:SparkContext) extends Serializable {
 
-  def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,(Double,SparseVector))]
+  def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))]
 
 }

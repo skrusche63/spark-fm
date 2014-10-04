@@ -20,6 +20,8 @@ package de.kp.spark.fm.actor
 
 import akka.actor.{Actor,ActorLogging}
 
+import de.kp.spark.fm.FMModel
+
 import de.kp.spark.fm.model._
 import de.kp.spark.fm.redis.RedisCache
 
@@ -37,6 +39,52 @@ class FMQuestor extends Actor with ActorLogging {
       val uid = req.data("uid")
 
       req.task match {
+        
+        case "get:prediction" => {
+          /*
+           * This request retrieves a set of features and computes
+           * the target (or decision) variable 
+            */
+          val resp = if (RedisCache.polynomExists(uid) == false) {           
+            failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
+            
+          } else {    
+            
+            /* Retrieve path to polynom for 'uid' from cache */
+            val path = RedisCache.polynom(uid)
+            if (path == null) {
+              failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
+              
+            } else {
+              
+              if (req.data.contains("features")) {
+              
+                try {
+                
+                  val model = new FMModel()
+                  model.load(path)
+                  
+                  val prediction = model.predict(req.data("features").split(",").map(_.toDouble)).toString
+
+                  val data = Map("uid" -> uid, "prediction" -> prediction)
+                  new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
+                
+                } catch {
+                  case e:Exception => {
+                    failure(req,e.toString())                   
+                  }
+                }
+                
+              } else {
+                failure(req,Messages.MISSING_FEATURES(uid))
+                
+              }
+            }
+          }
+             
+          origin ! Serializer.serializeResponse(resp)
+          
+        }
                  
         case _ => {
           

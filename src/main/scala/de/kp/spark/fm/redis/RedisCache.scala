@@ -26,7 +26,7 @@ import scala.collection.JavaConversions._
 object RedisCache {
 
   val client  = RedisClient()
-  val service = "arules"
+  val service = "fm"
   
   def addStatus(uid:String, task:String, status:String) {
    
@@ -37,6 +37,25 @@ object RedisCache {
     val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(service,task,status))
     
     client.zadd(k,timestamp,v)
+    
+  }
+  
+  def addPolynom(uid:String,model:String) {
+   
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "polynom:" + service + ":" + uid
+    val v = "" + timestamp + ":" + model
+    
+    client.zadd(k,timestamp,v)
+    
+  }
+  
+  def polynomExists(uid:String):Boolean = {
+
+    val k = "polynom:" + service + ":" + uid
+    client.exists(k)
     
   }
   
@@ -65,6 +84,23 @@ object RedisCache {
       
     }
      
+  }
+  
+  def polynom(uid:String):String = {
+
+    val k = "polynom:" + service + ":" + uid
+    val polynoms = client.zrange(k, 0, -1)
+
+    if (polynoms.size() == 0) {
+      null
+    
+    } else {
+      
+      val last = polynoms.toList.last
+      last.split(":")(1)
+      
+    }
+  
   }
   
   def status(uid:String):String = {

@@ -72,27 +72,22 @@ object Messages {
   def FM_BUILDING_STARTED(uid:String):String = String.format("""FM building started for uid '%s'.""", uid)
 
   def GENERAL_ERROR(uid:String):String = String.format("""A general error appeared for uid '%s'.""", uid)
+  
+  def MISSING_FEATURES(uid:String):String = String.format("""Features are missing for uid '%s'.""", uid)
+  
+  def MISSING_PARAMETERS(uid:String):String = String.format("""Parameters are missing for uid '%s'.""", uid)
+  
+  def MODEL_DOES_NOT_EXIST(uid:String):String = String.format("""Model does not exist for uid '%s'.""", uid)
 
   def NO_PARAMETERS_PROVIDED(uid:String):String = String.format("""No parameters provided for uid '%s'.""", uid)
 
   def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
-
-  /*
-   * Predict request have to provide either antecedents or consequents 
-   * that will be used as match criteria against discovered rules
-   */
-  def NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid:String):String = 
-    String.format("""
-      No antecedents or consequents are provided for uid '%s'.
-    """.stripMargin, uid)
 
   def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
 
   def TASK_DOES_NOT_EXIST(uid:String):String = String.format("""The task with uid '%s' does not exist.""", uid)
 
   def TASK_IS_UNKNOWN(uid:String,task:String):String = String.format("""The task '%s' is unknown for uid '%s'.""", task, uid)
-  
-  def MISSING_PARAMETERS(uid:String):String = String.format("""Paramaters are missing for uid '%s'.""", uid)
 
   def SOURCE_IS_UNKNOWN(uid:String,source:String):String = String.format("""Source '%s' is unknown for uid '%s'.""", source, uid)
   

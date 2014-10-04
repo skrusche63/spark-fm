@@ -115,6 +115,13 @@ object FM extends Serializable {
     Math.sqrt(rsme.collect().sum / file.count())
 
   }
+  
+  def predict(data:Array[Double],c:Double,v:DenseVector,m:DenseMatrix,num_factor:Int,k0:Boolean,k1:Boolean): Double = {
+  
+    val features = extractFeatures(data)
+    predict(features,c,v,m,num_factor,k0,k1)
+  
+  }
 
   private def predict(features:SparseVector,c:Double,v:DenseVector,m:DenseMatrix,num_factor:Int,k0:Boolean,k1:Boolean): Double = {
 

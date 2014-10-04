@@ -36,15 +36,6 @@ object Configuration {
     
   }
 
-  def cache():Int = {
-  
-    val cfg = config.getConfig("cache")
-    val maxentries = cfg.getInt("maxentries")
-    
-    maxentries
-    
-  }
-
   def elastic():HConf = {
   
     val cfg = config.getConfig("elastic")
@@ -66,7 +57,14 @@ object Configuration {
     cfg.getString("path")   
     
   }
- 
+    
+  def model():String = {
+  
+    val cfg = config.getConfig("model")
+    cfg.getString("base")   
+    
+  }
+
   def mysql():(String,String,String,String) = {
 
    val cfg = config.getConfig("mysql")

@@ -92,6 +92,8 @@ class DenseMatrix extends Serializable {
   
   def get() = data
   
+  def getRow(index:Int):Array[Double] = data(index)
+  
   def add(other: DenseMatrix) = DenseMatrix.this + other
 
   def - (other: DenseMatrix): DenseMatrix = {

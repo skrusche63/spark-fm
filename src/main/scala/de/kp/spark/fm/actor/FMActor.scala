@@ -18,10 +18,12 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import java.util.Date
+
 import akka.actor.Actor
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.fm.{Configuration,FM,SparseVector}
+import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
 
 import de.kp.spark.fm.model._
 import de.kp.spark.fm.source.FeatureSource
@@ -32,6 +34,8 @@ class FMActor extends Actor with SparkActor {
   
   /* Create Spark context */
   private val sc = createCtxLocal("FMActor",Configuration.spark)      
+  
+  private val base = Configuration.model
   
   def receive = {
 
@@ -86,9 +90,14 @@ class FMActor extends Actor with SparkActor {
     /* Determine error */
     val rsme = FM.calculateRSME(sc,params,c,v,m)
 
-    /* Put polynom to cache */
+    val now = new Date()
+    val dir = base + "/hmm-" + now.getTime().toString
     
-    // TODO
+    /* Save polynom in directory of file system */
+    new FMModel(c,v,m,params).save(dir)
+    
+    /* Put polynom to cache */
+    RedisCache.addPolynom(uid,dir)
          
     /* Update cache */
     RedisCache.addStatus(uid,task,FMStatus.FINISHED)

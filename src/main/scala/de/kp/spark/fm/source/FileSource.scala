@@ -31,9 +31,9 @@ class FileSource(@transient sc:SparkContext) extends Source(sc) {
    * Read data from file system: it is expected that the lines with
    * the respective text file are already formatted in the SPMF form
    */
-  override def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,(Double,SparseVector))] = {
+  override def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))] = {
     
-    val num_partitions = params("num_partitions").asInstanceOf[Int]
+    val num_partitions = params("num_partitions").toInt
     Partitioner.buildRandomPartitions(sc,input,num_partitions)
    
   }
