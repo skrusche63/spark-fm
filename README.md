@@ -18,6 +18,14 @@ For personalized recommendations, however, it is not sufficient to consider only
 
 ##### Semantic Concept Prediction
 
+Semantic concepts are a commonly used means to specify the meaning of web pages. These concepts are either explicitly provided by the respective authors (e.g in terms of metadata tags) or derived by sophisticated linguistic and semantic techniques. The latter thereby rely on specific terminologies, such as taxonomies, term-concept maps or even domain specific ontologies.
+
+Different website owners usually assign semantic concepts that refer to different terminologies. The hidden semantics of two different articles may be the same, but the assigned concepts differ and are controlled by different authors. Due to this situation, the content profiles associated with these articles are different.
+
+Factorization Machines are an appropriate means to overcome this concept heterogeneity and help to improve semantic interoperability.
+
+
+
 ### Factorization Machines
 
 Matrix factorization (MF) approaches to recommendations have become very popular as they usually outperform traditional k-nearest neighbor methods. MF, however, is context-unaware.
