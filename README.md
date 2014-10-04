@@ -1,6 +1,8 @@
 ![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
 
-## Context-Aware Recommendations
+## Reactive Factorization Engine
+
+### Context-Aware Recommendations
 
 Recommender systems are an important feature of modern websites. Especially commercial sites benefit from a boost in customer loyalty, click-through rates and revenues when using recommender systems.
 
@@ -10,7 +12,7 @@ For personalized recommendations, however, it is not sufficient to consider only
 
 > For example, using a temporal context, a travel recommender system would provide vacation recommendations in the winter, that can be very different from those in the summer.
 
-## Factorization Machines
+### Factorization Machines
 
 Matrix factorization (MF) approaches to recommendations have become very popular as they usually outperform traditional k-nearest neighbor methods. MF, however, is context-unaware.
 
@@ -23,7 +25,7 @@ Recently a recommendation approach, called *Multiverse Recommendation*, as been 
 Therefore, we suggest to build a context-aware recommender system on Factorization Machines (FM), recently introduced by Steffen Rendle. This approach results in fast context-aware recommendations as the model equation of FMs can be computed in linear time both in the number of contextual parameters and the selected factorization size.
 
 
-## Factorization Machines in Spark
+### Factorization Machines in Spark
 
 This is an implementation of Factorization Machines based on Scala and Apache Spark. It actually uses stochastic gradient descent (SGD) as a learning method while training the model parameters. 
 
