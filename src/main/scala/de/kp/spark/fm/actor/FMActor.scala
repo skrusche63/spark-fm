@@ -18,10 +18,11 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.util.Date
-
-import akka.actor.Actor
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+
+import java.util.Date
+import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
 
@@ -30,10 +31,7 @@ import de.kp.spark.fm.source.FeatureSource
 
 import de.kp.spark.fm.redis.RedisCache
 
-class FMActor extends Actor with SparkActor {
-  
-  /* Create Spark context */
-  private val sc = createCtxLocal("FMActor",Configuration.spark)      
+class FMActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
   
   private val base = Configuration.model
   
@@ -65,14 +63,13 @@ class FMActor extends Actor with SparkActor {
 
       }
       
-      sc.stop
       context.stop(self)
           
     }
     
     case _ => {
       
-      sc.stop
+      log.error("Unknown request.")
       context.stop(self)
       
     }

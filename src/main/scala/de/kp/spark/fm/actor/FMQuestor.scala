@@ -83,26 +83,46 @@ class FMQuestor extends Actor with ActorLogging {
           }
              
           origin ! Serializer.serializeResponse(resp)
+          context.stop(self)
           
         }
                  
         case _ => {
           
           val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
+          
           origin ! Serializer.serializeResponse(failure(req,msg))
+          context.stop(self)
            
         }
         
       }
       
     }
+    
+    case _ => {
+      
+      val origin = sender               
+      val msg = Messages.REQUEST_IS_UNKNOWN()          
+          
+      origin ! Serializer.serializeResponse(failure(null,msg))
+      context.stop(self)
+
+    }
   
   }
 
   private def failure(req:ServiceRequest,message:String):ServiceResponse = {
     
-    val data = Map("uid" -> req.data("uid"), "message" -> message)
-    new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
+    if (req == null) {
+      val data = Map("message" -> message)
+      new ServiceResponse("","",data,FMStatus.FAILURE)	
+      
+    } else {
+      val data = Map("uid" -> req.data("uid"), "message" -> message)
+      new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
+    
+    }
     
   }
   

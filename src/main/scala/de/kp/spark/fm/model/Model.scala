@@ -83,6 +83,8 @@ object Messages {
 
   def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
 
+  def REQUEST_IS_UNKNOWN():String = String.format("""Unknown request.""")
+
   def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
 
   def TASK_DOES_NOT_EXIST(uid:String):String = String.format("""The task with uid '%s' does not exist.""", uid)

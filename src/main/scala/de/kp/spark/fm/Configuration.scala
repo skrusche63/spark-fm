@@ -27,12 +27,15 @@ object Configuration {
   val path = "application.conf"
   val config = ConfigFactory.load(path)
 
-  def actor():Int = {
+  def actor():(Int,Int,Int) = {
   
     val cfg = config.getConfig("actor")
+
+    val duration = cfg.getInt("duration")
+    val retries = cfg.getInt("retries")  
     val timeout = cfg.getInt("timeout")
     
-    timeout
+    (duration,retries,timeout)
     
   }
 
@@ -89,19 +92,7 @@ object Configuration {
     (host,port)
     
   }
-  
-  def router():(Int,Int,Int) = {
-  
-    val cfg = config.getConfig("router")
-  
-    val time    = cfg.getInt("time")
-    val retries = cfg.getInt("retries")  
-    val workers = cfg.getInt("workers")
     
-    (time,retries,workers)
-
-  }
-  
   def spark():Map[String,String] = {
   
     val cfg = config.getConfig("spark")
