@@ -34,7 +34,7 @@ import scala.concurrent.Future
 class FMMaster extends Actor with ActorLogging with SparkActor {
   
   /* Create Spark context */
-  private val sc = createCtxLocal("FMActor",Configuration.spark)      
+  private val sc = createCtxLocal("FMContext",Configuration.spark)      
   
   val (duration,retries,time) = Configuration.actor   
 
