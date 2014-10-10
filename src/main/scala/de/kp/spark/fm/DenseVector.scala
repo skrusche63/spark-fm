@@ -18,6 +18,8 @@ package de.kp.spark.fm
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import scala.language.implicitConversions
+
 object DenseVector {
   
   def apply(elements: Array[Double]) = new DenseVector(elements)
