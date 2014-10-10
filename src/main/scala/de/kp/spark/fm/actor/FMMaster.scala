@@ -18,8 +18,9 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging,ActorRef,Props}
+import org.apache.spark.SparkContext
 
+import akka.actor.{Actor,ActorLogging,ActorRef,Props}
 import akka.pattern.ask
 import akka.util.Timeout
 
@@ -31,10 +32,7 @@ import de.kp.spark.fm.model._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future
 
-class FMMaster extends Actor with ActorLogging with SparkActor {
-  
-  /* Create Spark context */
-  private val sc = createCtxLocal("FMContext",Configuration.spark)      
+class FMMaster(@transient val sc:SparkContext) extends Actor with ActorLogging {
   
   val (duration,retries,time) = Configuration.actor   
 

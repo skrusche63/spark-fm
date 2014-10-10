@@ -39,12 +39,15 @@ object FMService {
 
 }
 
-class FMService(conf:String, name:String) {
+class FMService(conf:String, name:String) extends SparkService {
 
   val system = ActorSystem(name, ConfigFactory.load(conf))
   sys.addShutdownHook(system.shutdown)
+  
+  /* Create Spark context */
+  private val sc = createCtxLocal("FMContext",Configuration.spark)      
 
-  val master = system.actorOf(Props[FMMaster], name="fm-master")
+  val master = system.actorOf(Props(new FMMaster(sc)), name="fm-master")
 
   def shutdown = system.shutdown()
   
