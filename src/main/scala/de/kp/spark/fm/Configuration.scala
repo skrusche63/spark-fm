@@ -92,6 +92,17 @@ object Configuration {
     (host,port)
     
   }
+
+  def rest():(String,Int) = {
+      
+    val cfg = config.getConfig("rest")
+      
+    val host = cfg.getString("host")
+    val port = cfg.getInt("port")
+
+    (host,port)
+    
+  }
     
   def spark():Map[String,String] = {
   

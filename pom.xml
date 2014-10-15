@@ -49,14 +49,14 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- spark 1.1.0 -->
+    <!-- spark core -->
     <dependency>
 	  <groupId>org.apache.spark</groupId>
 	  <artifactId>spark-core_2.10</artifactId>
 	  <version>${spark.version}</version>
     </dependency>
     
-    <!-- spark mllib 1.1.0 -->
+    <!-- spark mllib -->
     <dependency>
 	  <groupId>org.apache.spark</groupId>
 	  <artifactId>spark-mllib_2.10</artifactId>
@@ -69,6 +69,31 @@
 	  <artifactId>json4s-native_2.10</artifactId>
 	  <version>3.2.10</version>
     </dependency>
+    
+    <!-- spray 1.2.0 -->
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-can</artifactId>
+      <version>1.2.0</version>
+    </dependency>  
+    
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-routing</artifactId>
+      <version>1.2.0</version>
+    </dependency>  
+    
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-client</artifactId>
+      <version>1.2.0</version>
+    </dependency>  
+    
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-caching</artifactId>
+      <version>1.2.0</version>
+    </dependency>  
 
     <!-- akka 2.2.3 -->
     <dependency>
@@ -97,6 +122,14 @@
     </dependency>
     
   </dependencies>
+  <repositories>
+  
+    <repository>
+      <id>spray repo</id>
+      <name>Spray Repository</name>
+      <url>http://repo.spray.io/</url>
+    </repository>
+  </repositories>
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
