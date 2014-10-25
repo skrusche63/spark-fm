@@ -1,6 +1,9 @@
 ![Elasticworks.](https://raw.githubusercontent.com/skrusche63/spark-fm/master/images/predictiveworks.png)
 
-Elasticworks. is an open ensemble of predictive engines and covers a wide range of today's analytics requirements. It has been made to bring the power of predictive analytics to Elasticsearch.
+Elasticworks. is an open ensemble of predictive engines and covers a wide range of today's analytics requirements. 
+
+It has been made to bring the power of predictive analytics to Elasticsearch.
+
 
 
 ## Reactive Factorization Engine
