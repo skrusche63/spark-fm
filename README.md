@@ -1,5 +1,10 @@
 ![Elasticworks.](https://raw.githubusercontent.com/skrusche63/spark-fm/master/images/predictiveworks.png)
 
+## Open Ensemble of Predictive Engines
+
+---
+
+
 ## Reactive Factorization Engine
 
 ### Use Cases
