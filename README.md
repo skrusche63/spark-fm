@@ -3,11 +3,17 @@
 **Predictiveworks.** is an open ensemble of predictive engines and has been made to cover a wide range of today's analytics requirements. **Predictiveworks.**  brings the power of predictive analytics to Elasticsearch.
 
 
-## Reactive Factorization Engine
+## Reactive Context-Aware Analysis Engine
 
-### Use Cases
+![Factorization Machines Overview](https://raw.githubusercontent.com/skrusche63/spark-fm/master/images/factorization-machines-overview.png)
 
-Factorization machines are multi-purpose predictors that are applicable to many different application areas. Below we describe some selected uses cases that we think are of common interest, and we certainly do not claim that the list of use cases is complete.
+The Context-Aware Analysis Engine is one of the nine members of the open ensemble and has a strong focus on context-sensitive data and interactions in 
+multi-dimensional datasets. It is the key to the next-generation of personalized predictions and customer relationships.
+
+### Examples
+
+The Context-Aware Analysis Engine is based on factorization machines. These are multi-purpose predictors that are applicable to many different application areas. 
+Below we describe some selected uses cases that we think are of common interest, and we certainly do not claim that the list of use cases is complete.
 
 ##### Context-Aware Recommendations
 
