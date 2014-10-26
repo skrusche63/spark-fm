@@ -4,11 +4,11 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Spark-FM : This is an implementation of Factorization Machines based on Scala and Apache Spark.">
+    <meta name="description" content="Context-Aware Analysis Engine : Next-Generation Personalization &amp; Recommendations">
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <title>Spark-FM</title>
+    <title>Context-Aware Analysis Engine</title>
   </head>
 
   <body>
@@ -18,8 +18,8 @@
         <header class="inner">
           <a id="forkme_banner" href="https://github.com/skrusche63/spark-fm">View on GitHub</a>
 
-          <h1 id="project_title">Spark-FM</h1>
-          <h2 id="project_tagline">This is an implementation of Factorization Machines based on Scala and Apache Spark.</h2>
+          <h1 id="project_title">Context-Aware Analysis Engine</h1>
+          <h2 id="project_tagline">Next-Generation Personalization &amp; Recommendations</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/skrusche63/spark-fm/zipball/master">Download this project as a .zip file</a>
@@ -31,10 +31,26 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <p><img src="https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png" alt="Dr.Krusche &amp; Partner PartG"></p>
+        <p><img src="https://raw.githubusercontent.com/skrusche63/spark-fm/master/images/predictiveworks.png" alt="Elasticworks."></p>
+
+<p><strong>Predictiveworks.</strong> is an open ensemble of predictive engines and has been made to cover a wide range of today's analytics requirements. <strong>Predictiveworks.</strong>  brings the power of predictive analytics to Elasticsearch.</p>
 
 <h2>
-<a name="context-aware-recommendations" class="anchor" href="#context-aware-recommendations"><span class="octicon octicon-link"></span></a>Context-Aware Recommendations</h2>
+<a name="reactive-context-aware-analysis-engine" class="anchor" href="#reactive-context-aware-analysis-engine"><span class="octicon octicon-link"></span></a>Reactive Context-Aware Analysis Engine</h2>
+
+<p><img src="https://raw.githubusercontent.com/skrusche63/spark-fm/master/images/factorization-machines-overview.png" alt="Factorization Machines Overview"></p>
+
+<p>The Context-Aware Analysis Engine is one of the nine members of the open ensemble and has a strong focus on context-sensitive data and interactions in 
+multi-dimensional datasets. It is the key to the next-generation of personalized predictions and customer relationships.</p>
+
+<h3>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h3>
+
+<p>The Context-Aware Analysis Engine is based on factorization machines. These are multi-purpose predictors that are applicable to many different application areas. 
+Below we describe some selected uses cases that we think are of common interest, and we certainly do not claim that the list of use cases is complete.</p>
+
+<h5>
+<a name="context-aware-recommendations" class="anchor" href="#context-aware-recommendations"><span class="octicon octicon-link"></span></a>Context-Aware Recommendations</h5>
 
 <p>Recommender systems are an important feature of modern websites. Especially commercial sites benefit from a boost in customer loyalty, click-through rates and revenues when using recommender systems.</p>
 
@@ -46,8 +62,17 @@
 <p>For example, using a temporal context, a travel recommender system would provide vacation recommendations in the winter, that can be very different from those in the summer.</p>
 </blockquote>
 
-<h2>
-<a name="factorization-machines" class="anchor" href="#factorization-machines"><span class="octicon octicon-link"></span></a>Factorization Machines</h2>
+<h5>
+<a name="semantic-concept-prediction" class="anchor" href="#semantic-concept-prediction"><span class="octicon octicon-link"></span></a>Semantic Concept Prediction</h5>
+
+<p>Semantic concepts are a commonly used means to specify the meaning of web pages. These concepts are either explicitly provided by the respective authors (e.g in terms of metadata tags) or derived by sophisticated linguistic and semantic techniques. The latter thereby rely on specific terminologies, such as taxonomies, term-concept maps or even domain specific ontologies.</p>
+
+<p>Different website owners usually assign semantic concepts that refer to different terminologies. The hidden semantics of two different articles may be the same, but the assigned concepts differ and are controlled by different authors. Due to this situation, the content profiles associated with these articles are different.</p>
+
+<p>Factorization Machines are an appropriate means to overcome this concept heterogeneity and help to improve semantic interoperability.</p>
+
+<h3>
+<a name="factorization-machines" class="anchor" href="#factorization-machines"><span class="octicon octicon-link"></span></a>Factorization Machines</h3>
 
 <p>Matrix factorization (MF) approaches to recommendations have become very popular as they usually outperform traditional k-nearest neighbor methods. MF, however, is context-unaware.</p>
 
@@ -59,8 +84,8 @@
 
 <p>Therefore, we suggest to build a context-aware recommender system on Factorization Machines (FM), recently introduced by Steffen Rendle. This approach results in fast context-aware recommendations as the model equation of FMs can be computed in linear time both in the number of contextual parameters and the selected factorization size.</p>
 
-<h2>
-<a name="factorization-machines-in-spark" class="anchor" href="#factorization-machines-in-spark"><span class="octicon octicon-link"></span></a>Factorization Machines in Spark</h2>
+<h3>
+<a name="factorization-machines-in-spark" class="anchor" href="#factorization-machines-in-spark"><span class="octicon octicon-link"></span></a>Factorization Machines in Spark</h3>
 
 <p>This is an implementation of Factorization Machines based on Scala and Apache Spark. It actually uses stochastic gradient descent (SGD) as a learning method while training the model parameters. </p>
 
@@ -78,7 +103,7 @@ Steffen Rendle (2012): Factorization Machines with libFM, in ACM Trans. Intell. 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright">Spark-FM maintained by <a href="https://github.com/skrusche63">skrusche63</a></p>
+        <p class="copyright">Context-Aware Analysis Engine maintained by <a href="https://github.com/skrusche63">skrusche63</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
