@@ -28,4 +28,23 @@ abstract class Source(@transient sc:SparkContext) extends Serializable {
 
   def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))]
 
+  /**
+   * This is a helper method to build a sparse vector from the input data;
+   * to this end, we reduce to such entries that are different from zero
+   */
+  def buildSparseVector(feature:Array[Double]):SparseVector = {
+    
+    val vector = new SparseVector(feature.length)
+    
+    for (i <- 0 until feature.length) {
+    	
+      val array_i: Double = feature(i)
+      if (array_i > 0) vector.update(i, array_i)
+        
+    }
+    
+    vector
+  
+  }
+
 }

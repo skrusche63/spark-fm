@@ -34,12 +34,12 @@ class FeatureSource(@transient sc:SparkContext) {
 
     val source = data("source")
     source match {
-      /* 
-       * Discover outliers from feature set persisted as a file on the (HDFS) 
-       * file system; the configuration parameters are retrieved from the service 
-       * configuration  
-       */    
+
       case Sources.FILE => new FileSource(sc).connect(data)
+
+      case Sources.ELASTIC => new ElasticSource(sc).connect(data)
+ 
+      case Sources.JDBC => new JdbcSource(sc).connect(data)
       
       case _ => null
       

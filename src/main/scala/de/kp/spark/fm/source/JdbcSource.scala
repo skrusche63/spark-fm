@@ -24,30 +24,43 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.fm.{Configuration,SparseVector}
+import de.kp.spark.fm.SparseVector
+import de.kp.spark.fm.model._
 
-class FileSource(@transient sc:SparkContext) extends Source(sc) {
+import de.kp.spark.fm.io.JdbcReader
+import de.kp.spark.fm.spec.{FeatureSpec}
 
-  val input = Configuration.file()
-  
-  /**
-   * Read data from file system: it is expected that the lines with
-   * the respective text file are already formatted in the SPMF form
-   */
+import scala.collection.mutable.ArrayBuffer
+
+class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
+ 
   override def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))] = {
     
-    val num_partitions = sc.broadcast(params("num_partitions").toInt)
-    val randomizedDS = sc.textFile(input).map(line => {
-    
-      val ix = new java.util.Random().nextInt(num_partitions.value)
-      
-      val parts = line.split(',')
-      
-      val target   = parts(0).toDouble
-      val features = parts(1).trim().split(' ').map(_.toDouble)
+    val uid = params("uid")        
+    val fields = FeatureSpec.get(uid)
 
-      (ix, (target,buildSparseVector(features)))
-   
+    val spec = sc.broadcast(fields)
+    val num_partitions = sc.broadcast(params("num_partitions").toInt)
+    
+    /* Retrieve site and query from params */
+    val site = params("site").asInstanceOf[Int]
+    val query = params("query").asInstanceOf[String]
+    
+    val rawset = new JdbcReader(sc,site,query).read(fields)
+    val randomizedDS = rawset.map(data => {
+      
+      val fields = spec.value
+      val ix = new java.util.Random().nextInt(num_partitions.value)
+
+      val target = data(fields.head).asInstanceOf[Double]
+      val features = ArrayBuffer.empty[Double]
+      
+      for (field <- fields.tail) {
+        features += data(field).asInstanceOf[Double]
+      }
+ 
+      (ix, (target,buildSparseVector(features.toArray)))
+      
     })
     
     val partitioner = new Partitioner() {
@@ -58,7 +71,7 @@ class FileSource(@transient sc:SparkContext) extends Source(sc) {
     }
     
     randomizedDS.partitionBy(partitioner)
-   
+    
   }
-  
+
 }
