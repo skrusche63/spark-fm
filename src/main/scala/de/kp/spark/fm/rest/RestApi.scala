@@ -82,15 +82,24 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	      ctx => doStatus(ctx)
 	    }
 	  }
-    } 
+    }  ~ 
+    path("track") {
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrack(ctx)
+	    }
+	  }
+    }     
 
   }
   
-  private def doGet[T](ctx:RequestContext) = doRequest(ctx,"factorization","get:prediction")
+  private def doGet[T](ctx:RequestContext) = doRequest(ctx,"context","get:prediction")
 
-  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"factorization","train")
+  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"context","train")
 
-  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"factorization","status")
+  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"context","status")
+
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"context","status")
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
      

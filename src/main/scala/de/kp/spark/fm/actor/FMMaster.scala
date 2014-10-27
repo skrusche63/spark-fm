@@ -63,6 +63,8 @@ class FMMaster(@transient val sc:SparkContext) extends Actor with ActorLogging {
          * be invoked after having retrieved a FINISHED status
          */
         case "status" => ask(actor("builder"),deser).mapTo[ServiceResponse]
+
+        case "track" => ask(actor("tracker"),deser).mapTo[ServiceResponse]
        
         case _ => {
 
@@ -100,6 +102,8 @@ class FMMaster(@transient val sc:SparkContext) extends Actor with ActorLogging {
       case "builder" => context.actorOf(Props(new FMBuilder(sc)))
         
       case "questor" => context.actorOf(Props(new FMQuestor()))
+        
+      case "tracker" => context.actorOf(Props(new FMTracker()))
       
       case _ => null
       
