@@ -119,11 +119,8 @@ class FMTracker extends Actor with ActorLogging {
       
       val (k,v) = rec
         
-      if (v.isInstanceOf[Double]) {    
-        
-        val name = k.replace("lbl.","").replace("fea.","")
-        source += k -> v      
-      } 
+      val name = k.replace("lbl.","").replace("fea.","")
+      source += k -> v      
       
     }
 
@@ -137,13 +134,13 @@ class FMTracker extends Actor with ActorLogging {
     val spec = records.map(rec => {
       
       val (k,v) = rec
-
+      /* Actually all values are specified as string types */
       val _name = k.replace("lbl.","").replace("fea.","")
-      val _type = if (v.isInstanceOf[Double]) "double" else "none"    
+      val _type = "string"    
 
       (_name,_type)
     
-    }).filter(kv => kv._2 != "none")
+    })
     
     val names = spec.map(_._1).toList
     val types = spec.map(_._2).toList
