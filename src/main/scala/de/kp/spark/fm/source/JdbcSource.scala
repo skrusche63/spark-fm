@@ -28,7 +28,7 @@ import de.kp.spark.fm.SparseVector
 import de.kp.spark.fm.model._
 
 import de.kp.spark.fm.io.JdbcReader
-import de.kp.spark.fm.spec.{FeatureSpec}
+import de.kp.spark.fm.spec.{Fields}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -37,7 +37,7 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
   override def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))] = {
     
     val uid = params("uid")        
-    val fields = FeatureSpec.get(uid)
+    val fields = Fields.get(uid)
 
     val spec = sc.broadcast(fields)
     val num_partitions = sc.broadcast(params("num_partitions").toInt)

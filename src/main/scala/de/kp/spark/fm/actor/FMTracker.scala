@@ -20,8 +20,6 @@ package de.kp.spark.fm.actor
 
 import java.util.Date
 
-import akka.actor.{Actor,ActorLogging}
-
 import de.kp.spark.fm.model._
 
 import de.kp.spark.fm.io.ElasticWriter
@@ -30,7 +28,7 @@ import de.kp.spark.fm.io.{ElasticBuilderFactory => EBF}
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 
-class FMTracker extends Actor with ActorLogging {
+class FMTracker extends BaseActor {
   
   def receive = {
     
@@ -148,19 +146,5 @@ class FMTracker extends Actor with ActorLogging {
     (names,types)
     
   }  
-
-  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
-    
-    if (req == null) {
-      val data = Map("message" -> message)
-      new ServiceResponse("","",data,FMStatus.FAILURE)	
-      
-    } else {
-      val data = Map("uid" -> req.data("uid"), "message" -> message)
-      new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
-    
-    }
-
-  }
  
 }

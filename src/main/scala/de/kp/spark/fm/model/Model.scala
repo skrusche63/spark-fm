@@ -29,6 +29,14 @@ case class ServiceRequest(
 case class ServiceResponse(
   service:String,task:String,data:Map[String,String],status:String
 )
+/*
+ * The Field and Fields classes are used to specify the fields with
+ * respect to the data source provided
+ */
+case class Field(
+  name:String,datatype:String
+)
+case class Fields(items:List[Field])
 
 /*
  * Service requests are mapped onto job descriptions and are stored
@@ -41,6 +49,10 @@ case class JobDesc(
 object Serializer {
     
   implicit val formats = Serialization.formats(NoTypeHints)
+  
+  def serializeFields(fields:Fields):String = write(fields)
+  
+  def deserializeFields(fields:String):Fields = read[Fields](fields)
 
   /*
    * Support for serialization and deserialization of job descriptions
@@ -60,11 +72,16 @@ object Serializer {
 }
 
 object Sources {
-  /* The names of the data source actually supported */
+
   val FILE:String    = "FILE"
   val ELASTIC:String = "ELASTIC" 
   val JDBC:String    = "JDBC"    
-  val PIWIK:String   = "PIWIK"    
+  val PIWIK:String   = "PIWIK"  
+    
+  private val sources = List(FILE,ELASTIC,JDBC,PIWIK)  
+  
+  def isSource(source:String):Boolean = sources.contains(source)
+  
 }
 
 object Messages {

@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>spark-fm</groupId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>${project.artifactId}</name>
+  <version>0.2.0</version>
+  <name>Spark-FM</name>
   <description>This is an implementation of Factorization Machines by Steffen Rendle (2012) based on Scala and Apache Spark.</description>
   <inceptionYear>2010</inceptionYear>
   <licenses>
@@ -217,6 +217,7 @@
   <artifactId>spark-fm</artifactId>
   <organization>
   	<name>Dr. Krusche &amp; Partner PartG</name>
-  	<url>http://dr-kruscheundpartner.de</url>
+  	<url>http://dr-kruscheundpartner.com</url>
   </organization>
+  <url>https://github.com/skrusche63/spark-fm</url>
 </project>

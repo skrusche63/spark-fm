@@ -20,7 +20,7 @@ package de.kp.spark.fm.actor
 
 import org.apache.spark.SparkContext
 
-import akka.actor.{Actor,ActorLogging,ActorRef,Props}
+import akka.actor.{ActorRef,Props}
 import akka.pattern.ask
 import akka.util.Timeout
 
@@ -32,10 +32,9 @@ import de.kp.spark.fm.redis.RedisCache
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-class FMBuilder(@transient val sc:SparkContext) extends Actor with ActorLogging {
+class FMBuilder(@transient val sc:SparkContext) extends BaseActor {
 
   implicit val ec = context.dispatcher
-  private val sources = Array(Sources.FILE)
   
   def receive = {
 
@@ -149,7 +148,7 @@ class FMBuilder(@transient val sc:SparkContext) extends Actor with ActorLogging 
       }
         
       case Some(source) => {
-        if (sources.contains(source) == false) {
+        if (Sources.isSource(source) == false) {
           return Some(Messages.SOURCE_IS_UNKNOWN(uid,source))    
         }          
       }
@@ -162,20 +161,6 @@ class FMBuilder(@transient val sc:SparkContext) extends Actor with ActorLogging 
 
   private def actor(req:ServiceRequest):ActorRef = {
      context.actorOf(Props(new FMActor(sc)))
-  }
-
-  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
-    
-    if (req == null) {
-      val data = Map("message" -> message)
-      new ServiceResponse("","",data,FMStatus.FAILURE)	
-      
-    } else {
-      val data = Map("uid" -> req.data("uid"), "message" -> message)
-      new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
-    
-    }
-    
   }
   
 }

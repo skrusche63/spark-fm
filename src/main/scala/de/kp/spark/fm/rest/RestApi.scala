@@ -76,6 +76,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    }
 	  }
     }  ~ 
+    path("register") { 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doRegister(ctx)
+	    }
+	  }
+    }  ~ 
     path("status") {
 	  post {
 	    respondWithStatus(OK) {
@@ -94,6 +101,8 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   }
   
   private def doGet[T](ctx:RequestContext) = doRequest(ctx,"context","get:prediction")
+  
+  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,"context","register")
 
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"context","train")
 

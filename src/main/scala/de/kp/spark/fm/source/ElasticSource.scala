@@ -32,7 +32,7 @@ import de.kp.spark.fm.{Configuration,SparseVector}
 import de.kp.spark.fm.io.ElasticReader
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.spec.{FeatureSpec}
+import de.kp.spark.fm.spec.{Fields}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -50,7 +50,7 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
     
     val query = params("query")
     
-    val spec = sc.broadcast(FeatureSpec.get(uid))
+    val spec = sc.broadcast(Fields.get(uid))
     val num_partitions = sc.broadcast(params("num_partitions").toInt)
     
     /* Connect to Elasticsearch */
