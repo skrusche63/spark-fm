@@ -28,7 +28,6 @@ class FMRegistrar extends BaseActor {
   def receive = {
     
     case req:ServiceRequest => {
-      
       val origin = sender    
       val uid = req.data("uid")
       
@@ -37,15 +36,20 @@ class FMRegistrar extends BaseActor {
         /* Unpack fields from request and register in Redis instance */
         val fields = ArrayBuffer.empty[Field]
 
-        val target = req.data("target")
-        fields += new Field(target,"double")
         /*
-         * It is important to have the features specified in the order
+         * ********************************************
+         * 
+         *  "uid" -> 123
+         *  "names" -> "target,feature,feature,feature"
+         *
+         * ********************************************
+         * 
+         * It is important to have the names specified in the order
          * they are used (later) to retrieve the respective data
          */
-        val features = req.data("features").split(",")
-        for (feature <- features) {
-          fields += new Field(feature,"double")
+        val names = req.data("names").split(",")
+        for (name <- names) {
+          fields += new Field(name,"double")
         }
  
         RedisCache.addFields(req, new Fields(fields.toList))
