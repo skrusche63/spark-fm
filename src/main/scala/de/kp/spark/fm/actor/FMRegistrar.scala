@@ -54,7 +54,7 @@ class FMRegistrar extends BaseActor {
  
         RedisCache.addFields(req, new Fields(fields.toList))
         
-        new ServiceResponse("context","meta",Map("uid"-> uid),FMStatus.SUCCESS)
+        new ServiceResponse("context","register",Map("uid"-> uid),FMStatus.SUCCESS)
         
       } catch {
         case throwable:Throwable => failure(req,throwable.getMessage)
