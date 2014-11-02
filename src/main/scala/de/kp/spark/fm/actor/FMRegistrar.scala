@@ -49,7 +49,7 @@ class FMRegistrar extends BaseActor {
          */
         val names = req.data("names").split(",")
         for (name <- names) {
-          fields += new Field(name,"double")
+          fields += new Field(name,"double","")
         }
  
         RedisCache.addFields(req, new Fields(fields.toList))

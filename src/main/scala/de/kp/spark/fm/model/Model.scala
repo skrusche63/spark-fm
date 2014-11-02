@@ -34,7 +34,7 @@ case class ServiceResponse(
  * respect to the data source provided
  */
 case class Field(
-  name:String,datatype:String
+  name:String,datatype:String,value:String
 )
 case class Fields(items:List[Field])
 
