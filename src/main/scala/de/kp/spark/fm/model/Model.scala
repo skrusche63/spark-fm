@@ -23,6 +23,13 @@ import org.json4s._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
+case class Listener(
+  timeout:Int, url:String
+)
+/**
+ * ServiceRequest & ServiceResponse specify the content 
+ * sent to and received from the decision service
+ */
 case class ServiceRequest(
   service:String,task:String,data:Map[String,String]
 )

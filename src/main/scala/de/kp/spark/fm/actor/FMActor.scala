@@ -22,7 +22,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import java.util.Date
-import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
 
@@ -31,7 +30,7 @@ import de.kp.spark.fm.source.FeatureSource
 
 import de.kp.spark.fm.redis.RedisCache
 
-class FMActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
+class FMActor(@transient val sc:SparkContext) extends BaseActor {
   
   private val base = Configuration.model
   
@@ -49,15 +48,15 @@ class FMActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
 
       if (missing == false) {
         /* Register status */
-        RedisCache.addStatus(uid,task,FMStatus.STARTED)
+        RedisCache.addStatus(req,FMStatus.STARTED)
  
         try {
                    
           val dataset = new FeatureSource(sc).get(req.data)
-          if (dataset != null) buildFM(uid,task,dataset,req.data)
+          if (dataset != null) buildFM(req,dataset)
           
         } catch {
-          case e:Exception => RedisCache.addStatus(uid,task,FMStatus.FAILURE)          
+          case e:Exception => RedisCache.addStatus(req,FMStatus.FAILURE)          
         }
  
 
@@ -76,28 +75,31 @@ class FMActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
     
   }
   
-  private def buildFM(uid:String,task:String,dataset:RDD[(Int,(Double,SparseVector))],params:Map[String,String]) {
-
+  private def buildFM(req:ServiceRequest,dataset:RDD[(Int,(Double,SparseVector))]) {
+    
     /* Update cache */
-    RedisCache.addStatus(uid,task,FMStatus.DATASET)
+    RedisCache.addStatus(req,FMStatus.DATASET)
 
     /* Train polynom (model) */
-    val (c,v,m) = FM.trainFromRDD(dataset,params)
+    val (c,v,m) = FM.trainFromRDD(dataset,req.data)
 
     /* Determine error */
-    val rsme = FM.calculateRSME(sc,params,c,v,m)
+    val rsme = FM.calculateRSME(sc,req.data,c,v,m)
 
     val now = new Date()
     val dir = base + "/hmm-" + now.getTime().toString
     
     /* Save polynom in directory of file system */
-    new FMModel(c,v,m,params).save(dir)
+    new FMModel(c,v,m,req.data).save(dir)
     
     /* Put polynom to cache */
-    RedisCache.addPolynom(uid,dir)
+    RedisCache.addPolynom(req,dir)
          
     /* Update cache */
-    RedisCache.addStatus(uid,task,FMStatus.FINISHED)
+    RedisCache.addStatus(req,FMStatus.FINISHED)
+    
+    /* Notify potential listeners */
+    notify(req,FMStatus.FINISHED)
     
   }
   
@@ -135,20 +137,5 @@ class FMActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
     }
     
   }
-  
-  private def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
-    
-    val uid = req.data("uid")
-    
-    if (missing == true) {
-      val data = Map("uid" -> uid, "message" -> Messages.MISSING_PARAMETERS(uid))
-      new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
-  
-    } else {
-      val data = Map("uid" -> uid, "message" -> Messages.FM_BUILDING_STARTED(uid))
-      new ServiceResponse(req.service,req.task,data,FMStatus.STARTED)	
-  
-    }
 
-  }
 }

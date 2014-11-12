@@ -39,24 +39,24 @@ object RedisCache {
     
   }
   
-  def addStatus(uid:String, task:String, status:String) {
+  def addStatus(req:ServiceRequest, status:String) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "job:context:" + uid
-    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc("context",task,status))
+    val k = "job:context:" + req.data("uid")
+    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc("context",req.task,status))
     
     client.zadd(k,timestamp,v)
     
   }
   
-  def addPolynom(uid:String,model:String) {
+  def addPolynom(req:ServiceRequest,model:String) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "polynom:context:" + uid
+    val k = "polynom:context:" + req.data("uid")
     val v = "" + timestamp + ":" + model
     
     client.zadd(k,timestamp,v)
