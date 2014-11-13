@@ -73,21 +73,9 @@ class FMIndexer extends BaseActor {
   }
  
   private def fieldspec(params:Map[String,String]):(List[String],List[String]) = {
-    
-    val records = params.filter(kv => kv._1.startsWith("lbl.") || kv._1.startsWith("fea."))
-    val spec = records.map(rec => {
-      
-      val (k,v) = rec
-      /* Actually all values are specified as string types */
-      val _name = k.replace("lbl.","").replace("fea.","")
-      val _type = "string"    
 
-      (_name,_type)
-    
-    })
-    
-    val names = spec.map(_._1).toList
-    val types = spec.map(_._2).toList
+    val names = params("names").split(",").toList
+    val types = params("types").split(",").toList
     
     (names,types)
     
