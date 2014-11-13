@@ -53,21 +53,12 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
 	  val response = deser.task.split(":")(0) match {
 
 	    case "get" => ask(actor("questor"),deser).mapTo[ServiceResponse]
-        /*
-         * Request to register field specification
-         */
-        case "register"  => ask(actor("registrar"),deser).mapTo[ServiceResponse]
-        /*
-         * Starting the factorization machine builing
-         */
-        case "train"  => ask(actor("builder"),deser).mapTo[ServiceResponse]
-        /*
-         * Request the actual status of a factorization machine
-         * building task; note, that get requests should only
-         * be invoked after having retrieved a FINISHED status
-         */
-        case "status" => ask(actor("builder"),deser).mapTo[ServiceResponse]
+	    case "index" => ask(actor("indxer"),deser).mapTo[ServiceResponse]
 
+	    case "register"  => ask(actor("registrar"),deser).mapTo[ServiceResponse]
+        case "train"  => ask(actor("builder"),deser).mapTo[ServiceResponse]
+
+        case "status" => ask(actor("builder"),deser).mapTo[ServiceResponse]
         case "track" => ask(actor("tracker"),deser).mapTo[ServiceResponse]
        
         case _ => {
@@ -104,6 +95,8 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
     worker match {
   
       case "builder" => context.actorOf(Props(new FMBuilder(sc)))
+  
+      case "indexer" => context.actorOf(Props(new FMIndexer()))
         
       case "questor" => context.actorOf(Props(new FMQuestor()))
         

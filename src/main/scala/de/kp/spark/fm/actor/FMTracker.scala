@@ -21,9 +21,7 @@ package de.kp.spark.fm.actor
 import java.util.Date
 
 import de.kp.spark.fm.model._
-
-import de.kp.spark.fm.io.ElasticWriter
-import de.kp.spark.fm.io.{ElasticBuilderFactory => EBF}
+import de.kp.spark.fm.io.{ElasticBuilderFactory => EBF,ElasticWriter}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
@@ -52,21 +50,13 @@ class FMTracker extends BaseActor {
   private def createTargetedPoint(req:ServiceRequest) {
           
     try {
-      /*
-       * Elasticsearch is used as a source and also as a sink; this implies
-       * that the respective index and mapping must be distinguished; the source
-       * index and mapping used here is the same as for ElasticSource
-       */
-      val index   = req.data("source.index")
-      val mapping = req.data("source.type")
+
+      val index   = req.data("index")
+      val mapping = req.data("type")
     
-      val (names,types) = fieldspec(req.data)
-    
-      val builder = EBF.getBuilder("feature",mapping,names,types)
       val writer = new ElasticWriter()
     
-      /* Prepare index and mapping for write */
-      val readyToWrite = writer.open(index,mapping,builder)
+      val readyToWrite = writer.open(index,mapping)
       if (readyToWrite == false) {
       
         writer.close()
@@ -125,26 +115,5 @@ class FMTracker extends BaseActor {
     source
     
   }
- 
-  private def fieldspec(params:Map[String,String]):(List[String],List[String]) = {
-    
-    val records = params.filter(kv => kv._1.startsWith("lbl.") || kv._1.startsWith("fea."))
-    val spec = records.map(rec => {
-      
-      val (k,v) = rec
-      /* Actually all values are specified as string types */
-      val _name = k.replace("lbl.","").replace("fea.","")
-      val _type = "string"    
-
-      (_name,_type)
-    
-    })
-    
-    val names = spec.map(_._1).toList
-    val types = spec.map(_._2).toList
-    
-    (names,types)
-    
-  }  
  
 }

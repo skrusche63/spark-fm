@@ -18,8 +18,6 @@ package de.kp.spark.fm.io
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.util.concurrent.locks.ReentrantLock
-
 import org.elasticsearch.node.NodeBuilder._
 
 import org.elasticsearch.action.ActionListener
@@ -27,7 +25,7 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.index.IndexRequest.OpType
 
 import org.elasticsearch.common.logging.Loggers
-import org.elasticsearch.common.xcontent.{XContentBuilder,XContentFactory}
+import org.elasticsearch.common.xcontent.{XContentFactory}
 
 import org.elasticsearch.client.Requests
 import scala.collection.JavaConversions._
@@ -38,43 +36,29 @@ class ElasticWriter {
   private val client = node.client()
   
   private val logger = Loggers.getLogger(getClass())
-  private val indexCreationLock = new ReentrantLock()
-
   private var readyToWrite = false
   
-  def open(index:String,mapping:String,builder:XContentBuilder):Boolean = {
+  def open(index:String,mapping:String):Boolean = {
         
     try {
       
-      indexCreationLock.lock()
       val indices = client.admin().indices
       /*
        * Check whether referenced index exists; if index does not
-       * exist, create one
+       * exist, through exception
        */
       val existsRes = indices.prepareExists(index).execute().actionGet()            
       if (existsRes.isExists() == false) {
-        
-        val createRes = indices.prepareCreate(index).execute().actionGet()            
-        if (createRes.isAcknowledged() == false) {
-          new Exception("Failed to create " + index)
-        }
-            
+        new Exception("Index '" + index + "' does not exist.")            
       }
 
       /*
        * Check whether the referenced mapping exists; if mapping
-       * does not exist, create one
+       * does not exist, through exception
        */
       val prepareRes = indices.prepareGetMappings(index).setTypes(mapping).execute().actionGet()
       if (prepareRes.mappings().isEmpty) {
-
-        val mappingRes = indices.preparePutMapping(index).setType(mapping).setSource(builder).execute().actionGet()
-            
-        if (mappingRes.isAcknowledged() == false) {
-          new Exception("Failed to create mapping for " + index + "/" + mapping)
-        }            
-
+        new Exception("Mapping '" + index + "/" + mapping + "' does not exist.")
       }
       
       readyToWrite = true
@@ -86,7 +70,6 @@ class ElasticWriter {
       }
        
     } finally {
-     indexCreationLock.unlock()
     }
     
     readyToWrite
