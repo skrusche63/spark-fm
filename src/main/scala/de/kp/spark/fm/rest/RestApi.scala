@@ -62,10 +62,10 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 
   private def routes:Route = {
 
-    path("get") {
+    path("get" / Segment) {subject => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doGet(ctx)
+	      ctx => doGet(ctx,subject)
 	    }
 	  }
     }  ~ 
@@ -107,7 +107,22 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 
   }
   
-  private def doGet[T](ctx:RequestContext) = doRequest(ctx,"context","get:prediction")
+  private def doGet[T](ctx:RequestContext,subject:String) = {
+    
+    subject match {
+      /*
+       * This request provides a feature vector and retrieved
+       * the respective target variable
+       */
+      case "prediction" => doRequest(ctx,"context","get:prediction")
+      
+      case "recommendation" => doRequest(ctx,"context","get:recommendation")
+      
+      case _ => {}
+      
+    }
+    
+  }
   
   private def doIndex[T](ctx:RequestContext) = doRequest(ctx,"context","index")
   

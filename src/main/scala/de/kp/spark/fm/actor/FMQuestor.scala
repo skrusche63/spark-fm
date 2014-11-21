@@ -36,14 +36,15 @@ class FMQuestor extends BaseActor {
       val origin = sender    
       val uid = req.data("uid")
 
-      req.task match {
+      val response = req.task.split(":")(1) match {
         
-        case "get:prediction" => {
+        case "prediction" => {
           /*
-           * This request retrieves a set of features and computes
-           * the target (or decision) variable 
-            */
-          val resp = if (RedisCache.polynomExists(uid) == false) {           
+           * This request retrieves a set of features and computes the target 
+           * (or decision) variable; this refers to a general purpose rating
+           * prediction
+           */
+          if (RedisCache.polynomExists(uid) == false) {           
             failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
             
           } else {    
@@ -79,22 +80,31 @@ class FMQuestor extends BaseActor {
               }
             }
           }
-             
-          origin ! Serializer.serializeResponse(resp)
-          context.stop(self)
-          
+         
         }
                  
+        case "recommendation" => {
+          
+          if (RedisCache.polynomExists(uid) == false) {           
+            failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
+            
+          } else {    
+            /* not yet implemented */
+            null
+          }
+        }
+        
         case _ => {
           
-          val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
-          
-          origin ! Serializer.serializeResponse(failure(req,msg))
-          context.stop(self)
+          val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)          
+          failure(req,msg)
            
         }
         
       }
+          
+      origin ! Serializer.serializeResponse(response)
+      context.stop(self)
       
     }
     

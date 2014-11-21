@@ -23,13 +23,18 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.fm.source.FileSource
+import de.kp.spark.fm.source.{FeatureModel,FileSource}
 
 object FM extends Serializable {
 
   def trainFromFile(@transient sc:SparkContext,params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
     
-    val dataset = new FileSource(sc).connect(params)
+    val model = new FeatureModel(sc)
+    val partitions = params("num_partitions").toInt
+    
+    val rawset = new FileSource(sc).connect(params)
+    val dataset = model.buildFile("",rawset,partitions)
+    
     trainFromRDD(dataset,params)
     
   }

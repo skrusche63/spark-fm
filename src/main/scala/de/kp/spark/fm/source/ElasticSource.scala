@@ -18,67 +18,25 @@ package de.kp.spark.fm.source
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark._
-import org.apache.spark.SparkContext._
-
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
-
-import de.kp.spark.fm.{Configuration,SparseVector}
-
 import de.kp.spark.fm.io.ElasticReader
 
-import de.kp.spark.fm.model._
-import de.kp.spark.fm.spec.{Fields}
-
-import scala.collection.mutable.ArrayBuffer
-
-class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
-          
-  /* Retrieve data from Elasticsearch */    
-  val conf = Configuration.elastic                          
+class ElasticSource(@transient sc:SparkContext) {
  
-  override def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))] = {
-    
-    val uid = params("uid")    
-    
+  def connect(params:Map[String,String] = Map.empty[String,String]):RDD[Map[String,String]] = {
+    /*
+     * Elasticsearch is used as a data source as well as a data sink;
+     * this implies that the respective indexes and mappings have to
+     * be distinguished
+     */    
     val index = params("source.index")
     val mapping = params("source.type")
     
     val query = params("query")
     
-    val spec = sc.broadcast(Fields.get(uid))
-    val num_partitions = sc.broadcast(params("num_partitions").toInt)
-    
-    /* Connect to Elasticsearch */
-    val rawset = new ElasticReader(sc,index,mapping,query).read
-    val randomizedDS = rawset.map(data => {
-      
-      val fields = spec.value
-      val ix = new java.util.Random().nextInt(num_partitions.value)
- 
-      val target = data(fields.head).toDouble
-      val features = ArrayBuffer.empty[Double]
-      
-      for (field <- fields.tail) {
-        features += data(field).toDouble
-      }
-
-      (ix, (target,buildSparseVector(features.toArray)))
-      
-    })
-    
-    val partitioner = new Partitioner() {
-      
-      def numPartitions = num_partitions.value
-      def getPartition(key: Any) = key.asInstanceOf[Int]
-      
-    }
-    
-    randomizedDS.partitionBy(partitioner)
+    new ElasticReader(sc,index,mapping,query).read
     
   }
 

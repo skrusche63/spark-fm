@@ -32,45 +32,18 @@ import de.kp.spark.fm.spec.{Fields}
 
 import scala.collection.mutable.ArrayBuffer
 
-class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
+class JdbcSource(@transient sc:SparkContext) {
  
-  override def connect(params:Map[String,String] = Map.empty[String,String]):RDD[(Int,(Double,SparseVector))] = {
+  def connect(params:Map[String,String] = Map.empty[String,String]):RDD[Map[String,Any]] = {
     
     val uid = params("uid")        
     val fields = Fields.get(uid)
-
-    val spec = sc.broadcast(fields)
-    val num_partitions = sc.broadcast(params("num_partitions").toInt)
     
     /* Retrieve site and query from params */
     val site = params("site").asInstanceOf[Int]
     val query = params("query").asInstanceOf[String]
     
-    val rawset = new JdbcReader(sc,site,query).read(fields)
-    val randomizedDS = rawset.map(data => {
-      
-      val fields = spec.value
-      val ix = new java.util.Random().nextInt(num_partitions.value)
-
-      val target = data(fields.head).asInstanceOf[Double]
-      val features = ArrayBuffer.empty[Double]
-      
-      for (field <- fields.tail) {
-        features += data(field).asInstanceOf[Double]
-      }
- 
-      (ix, (target,buildSparseVector(features.toArray)))
-      
-    })
-    
-    val partitioner = new Partitioner() {
-      
-      def numPartitions = num_partitions.value
-      def getPartition(key: Any) = key.asInstanceOf[Int]
-      
-    }
-    
-    randomizedDS.partitionBy(partitioner)
+    new JdbcReader(sc,site,query).read(fields)
     
   }
 
