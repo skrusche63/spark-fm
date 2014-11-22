@@ -21,13 +21,14 @@ package de.kp.spark.fm.actor
 import de.kp.spark.fm.FMModel
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.redis.RedisCache
+import de.kp.spark.fm.sink.RedisSink
 
 import scala.collection.JavaConversions._
 
 class FMQuestor extends BaseActor {
 
   implicit val ec = context.dispatcher
+  val sink = new RedisSink()
   
   def receive = {
 
@@ -44,13 +45,13 @@ class FMQuestor extends BaseActor {
            * (or decision) variable; this refers to a general purpose rating
            * prediction
            */
-          if (RedisCache.polynomExists(uid) == false) {           
+          if (sink.polynomExists(uid) == false) {           
             failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
             
           } else {    
             
             /* Retrieve path to polynom for 'uid' from cache */
-            val path = RedisCache.polynom(uid)
+            val path = sink.polynom(uid)
             if (path == null) {
               failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
               
@@ -85,7 +86,7 @@ class FMQuestor extends BaseActor {
                  
         case "recommendation" => {
           
-          if (RedisCache.polynomExists(uid) == false) {           
+          if (sink.polynomExists(uid) == false) {           
             failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
             
           } else {    

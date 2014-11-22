@@ -62,29 +62,10 @@ object RedisCache {
     client.zadd(k,timestamp,v)
     
   }
-  
-  def addPolynom(req:ServiceRequest,model:String) {
-   
-    val now = new Date()
-    val timestamp = now.getTime()
-    
-    val k = "polynom:context:" + req.data("uid")
-    val v = "" + timestamp + ":" + model
-    
-    client.zadd(k,timestamp,v)
-    
-  }
 
   def fieldsExist(uid:String):Boolean = {
 
     val k = "fields:context:" + uid
-    client.exists(k)
-    
-  }
-  
-  def polynomExists(uid:String):Boolean = {
-
-    val k = "polynom:context:" + uid
     client.exists(k)
     
   }
@@ -113,23 +94,6 @@ object RedisCache {
       
     }
 
-  }
-  
-  def polynom(uid:String):String = {
-
-    val k = "polynom:context:" + uid
-    val polynoms = client.zrange(k, 0, -1)
-
-    if (polynoms.size() == 0) {
-      null
-    
-    } else {
-      
-      val last = polynoms.toList.last
-      last.split(":")(1)
-      
-    }
-  
   }
   
   def requestsTotal():Long = {

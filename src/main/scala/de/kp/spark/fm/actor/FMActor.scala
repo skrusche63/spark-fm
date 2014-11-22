@@ -29,6 +29,7 @@ import de.kp.spark.fm.model._
 import de.kp.spark.fm.source.FeatureSource
 
 import de.kp.spark.fm.redis.RedisCache
+import de.kp.spark.fm.sink.RedisSink
 
 class FMActor(@transient val sc:SparkContext) extends BaseActor {
   
@@ -92,8 +93,9 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
     /* Save polynom in directory of file system */
     new FMModel(c,v,m,req.data).save(dir)
     
-    /* Put polynom to cache */
-    RedisCache.addPolynom(req,dir)
+    /* Put path to polynom to Redis sink */
+    val sink = new RedisSink()
+    sink.addPolynom(req,dir)
          
     /* Update cache */
     RedisCache.addStatus(req,FMStatus.FINISHED)
@@ -124,9 +126,6 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
       if (req.data.contains("reg_c") == false) return false
       if (req.data.contains("reg_v") == false) return false
       if (req.data.contains("reg_m") == false) return false
-      
-      val k = req.data("k").toInt
-      val minconf = req.data("minconf").toDouble
         
       return true
         
