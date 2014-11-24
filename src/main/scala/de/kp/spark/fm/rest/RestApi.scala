@@ -28,11 +28,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import spray.http.StatusCodes._
-import spray.httpx.encoding.Gzip
-import spray.httpx.marshalling.Marshaller
 
 import spray.routing.{Directives,HttpService,RequestContext,Route}
-import spray.routing.directives.EncodingDirectives
 import spray.routing.directives.CachingDirectives
 
 import scala.concurrent.{ExecutionContext}
@@ -40,6 +37,8 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
+
+import de.kp.spark.core.rest.RestService
 
 import de.kp.spark.fm.Configuration
 import de.kp.spark.fm.actor.FMMaster
@@ -49,7 +48,7 @@ import de.kp.spark.fm.model._
 class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkContext) extends HttpService with Directives {
 
   implicit val ec:ExecutionContext = system.dispatcher  
-  import de.kp.spark.fm.rest.RestJsonSupport._
+  import de.kp.spark.core.rest.RestJsonSupport._
   
   override def actorRefFactory:ActorSystem = system
   

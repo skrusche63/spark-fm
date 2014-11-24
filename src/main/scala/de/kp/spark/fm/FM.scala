@@ -23,7 +23,8 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.fm.source.{FeatureModel,FileSource}
+import de.kp.spark.core.source.FileSource
+import de.kp.spark.fm.source.{FeatureModel}
 
 object FM extends Serializable {
 
@@ -32,7 +33,9 @@ object FM extends Serializable {
     val model = new FeatureModel(sc)
     val partitions = params("num_partitions").toInt
     
-    val rawset = new FileSource(sc).connect(params)
+    val path = Configuration.file()
+    
+    val rawset = new FileSource(sc).connect(params,path)
     val dataset = model.buildFile("",rawset,partitions)
     
     trainFromRDD(dataset,params)

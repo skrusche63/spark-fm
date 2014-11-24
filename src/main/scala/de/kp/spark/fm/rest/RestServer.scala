@@ -20,7 +20,8 @@ package de.kp.spark.fm.rest
 
 import akka.actor.ActorSystem
 
-import de.kp.spark.fm.{Configuration,SparkService}
+import de.kp.spark.core.SparkService
+import de.kp.spark.fm.{Configuration}
 
 object RestServer extends SparkService {
   

@@ -21,8 +21,12 @@ package de.kp.spark.fm.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.fm.SparseVector
+import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
+
+import de.kp.spark.fm.{Configuration,SparseVector}
 import de.kp.spark.fm.model._
+
+import de.kp.spark.fm.spec.{Fields}
 
 /**
  * FeatureSource is an abstraction layer on top of the physical 
@@ -43,8 +47,10 @@ class FeatureSource(@transient sc:SparkContext) {
     source match {
 
       case Sources.FILE => {
+
+        val path = Configuration.file()
         
-        val rawset = new FileSource(sc).connect(data)
+        val rawset = new FileSource(sc).connect(data,path)
         model.buildFile(uid,rawset,partitions)
         
       }
@@ -57,8 +63,10 @@ class FeatureSource(@transient sc:SparkContext) {
       }
  
       case Sources.JDBC => {
+
+        val fields = Fields.get(uid)
         
-        val rawset = new JdbcSource(sc).connect(data)
+        val rawset = new JdbcSource(sc).connect(data,fields)
         model.buildJDBC(uid,rawset,partitions)
 
       }

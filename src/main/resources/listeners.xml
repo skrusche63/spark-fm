@@ -3,5 +3,5 @@
   Timeout is specified in seconds and is used to supervise the 
   connection to a remote akka service
    -->
-  <service name="fraud" timeout="5">akka.tcp://fraud-server@127.0.0.1:2702/user/fraud-master</service>
+  <service name="recom" timeout="5">akka.tcp://recom-server@127.0.0.1:2702/user/recom-master</service>
 </services>

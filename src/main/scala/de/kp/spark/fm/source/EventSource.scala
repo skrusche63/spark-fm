@@ -21,7 +21,9 @@ package de.kp.spark.fm.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.fm.SparseVector
+import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
+
+import de.kp.spark.fm.{Configuration,SparseVector}
 import de.kp.spark.fm.model._
 
 /**
@@ -43,8 +45,10 @@ class EventSource(@transient sc:SparkContext) {
     source match {
 
       case Sources.FILE => {
+
+        val path = Configuration.file()
         
-        val rawset = new FileSource(sc).connect(data)
+        val rawset = new FileSource(sc).connect(data,path)
         model.buildFile(uid,rawset,partitions)
         
       }
@@ -58,7 +62,7 @@ class EventSource(@transient sc:SparkContext) {
  
       case Sources.JDBC => {
         
-        val rawset = new JdbcSource(sc).connect(data)
+        val rawset = new JdbcSource(sc).connect(data,List.empty[String])
         model.buildJDBC(uid,rawset,partitions)
 
       }
