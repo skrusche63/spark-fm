@@ -24,6 +24,8 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.model._
+
 import de.kp.spark.fm.{Configuration,SparseVector}
 import de.kp.spark.fm.spec.{Fields}
 
@@ -31,9 +33,9 @@ import scala.collection.mutable.ArrayBuffer
 
 class FeatureModel(@transient sc:SparkContext) extends Serializable {
   
-  def buildElastic(uid:String,rawset:RDD[Map[String,String]],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
+  def buildElastic(req:ServiceRequest,rawset:RDD[Map[String,String]],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
     
-    val spec = sc.broadcast(Fields.get(uid))
+    val spec = sc.broadcast(Fields.get(req))
     val num_partitions = sc.broadcast(partitions)
         
     val randomizedDS = rawset.map(data => {
@@ -63,7 +65,7 @@ class FeatureModel(@transient sc:SparkContext) extends Serializable {
 
   }
   
-  def buildFile(uid:String,rawset:RDD[String],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
+  def buildFile(req:ServiceRequest,rawset:RDD[String],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
 
     val num_partitions = sc.broadcast(partitions)
     val randomizedDS = rawset.map(line => {
@@ -90,9 +92,9 @@ class FeatureModel(@transient sc:SparkContext) extends Serializable {
     
   }
   
-  def buildJDBC(uid:String,rawset:RDD[Map[String,Any]],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
+  def buildJDBC(req:ServiceRequest,rawset:RDD[Map[String,Any]],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
 
-    val spec = sc.broadcast(Fields.get(uid))
+    val spec = sc.broadcast(Fields.get(req))
     val num_partitions = sc.broadcast(partitions)
     
     val randomizedDS = rawset.map(data => {

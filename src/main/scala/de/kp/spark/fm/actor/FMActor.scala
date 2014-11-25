@@ -23,12 +23,12 @@ import org.apache.spark.rdd.RDD
 
 import java.util.Date
 
+import de.kp.spark.core.model._
 import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
 
 import de.kp.spark.fm.model._
 import de.kp.spark.fm.source.FeatureSource
 
-import de.kp.spark.fm.redis.RedisCache
 import de.kp.spark.fm.sink.RedisSink
 
 class FMActor(@transient val sc:SparkContext) extends BaseActor {
@@ -38,9 +38,6 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
   def receive = {
 
     case req:ServiceRequest => {
-
-      val uid = req.data("uid")
-      val task = req.task
       
       val missing = properties(req)
       
@@ -49,15 +46,15 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
 
       if (missing == false) {
         /* Register status */
-        RedisCache.addStatus(req,FMStatus.STARTED)
+        cache.addStatus(req,FMStatus.STARTED)
  
         try {
                    
-          val dataset = new FeatureSource(sc).get(req.data)
+          val dataset = new FeatureSource(sc).get(req)
           if (dataset != null) buildFM(req,dataset)
           
         } catch {
-          case e:Exception => RedisCache.addStatus(req,FMStatus.FAILURE)          
+          case e:Exception => cache.addStatus(req,FMStatus.FAILURE)          
         }
  
 
@@ -79,7 +76,7 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
   private def buildFM(req:ServiceRequest,dataset:RDD[(Int,(Double,SparseVector))]) {
     
     /* Update cache */
-    RedisCache.addStatus(req,FMStatus.DATASET)
+    cache.addStatus(req,FMStatus.DATASET)
 
     /* Train polynom (model) */
     val (c,v,m) = FM.trainFromRDD(dataset,req.data)
@@ -98,7 +95,7 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
     sink.addPolynom(req,dir)
          
     /* Update cache */
-    RedisCache.addStatus(req,FMStatus.FINISHED)
+    cache.addStatus(req,FMStatus.FINISHED)
     
     /* Notify potential listeners */
     notify(req,FMStatus.FINISHED)

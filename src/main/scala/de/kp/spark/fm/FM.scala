@@ -36,7 +36,7 @@ object FM extends Serializable {
     val path = Configuration.file()
     
     val rawset = new FileSource(sc).connect(params,path)
-    val dataset = model.buildFile("",rawset,partitions)
+    val dataset = model.buildFile(null,rawset,partitions)
     
     trainFromRDD(dataset,params)
     

@@ -20,8 +20,8 @@ package de.kp.spark.fm.sink
 
 import java.util.Date
 
-import de.kp.spark.fm.model._
-import de.kp.spark.fm.redis.RedisClient
+import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisClient
 
 import scala.collection.JavaConversions._
 

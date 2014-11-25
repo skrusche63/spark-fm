@@ -23,7 +23,7 @@ import scala.xml._
 import scala.io.Source
 import scala.collection.mutable.HashMap
 
-import de.kp.spark.fm.model.Listener
+import de.kp.spark.core.model.Listener
 import scala.util.control.Breaks._
 
 object Listeners {

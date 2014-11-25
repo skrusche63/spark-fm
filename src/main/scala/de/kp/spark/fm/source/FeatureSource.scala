@@ -21,6 +21,7 @@ package de.kp.spark.fm.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.model._
 import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
 
 import de.kp.spark.fm.{Configuration,SparseVector}
@@ -38,36 +39,36 @@ class FeatureSource(@transient sc:SparkContext) {
 
   private val model = new FeatureModel(sc)
   
-  def get(data:Map[String,String]):RDD[(Int,(Double,SparseVector))] = {
+  def get(req:ServiceRequest):RDD[(Int,(Double,SparseVector))] = {
         
-    val uid = data("uid")
-    val partitions = data("num_partitions").toInt
+    val uid = req.data("uid")
+    val partitions = req.data("num_partitions").toInt
 
-    val source = data("source")
+    val source = req.data("source")
     source match {
 
       case Sources.FILE => {
 
         val path = Configuration.file()
         
-        val rawset = new FileSource(sc).connect(data,path)
-        model.buildFile(uid,rawset,partitions)
+        val rawset = new FileSource(sc).connect(req.data,path)
+        model.buildFile(req,rawset,partitions)
         
       }
 
       case Sources.ELASTIC => {
        
-       val rawset = new ElasticSource(sc).connect(data)
-       model.buildElastic(uid,rawset,partitions)
+       val rawset = new ElasticSource(sc).connect(req.data)
+       model.buildElastic(req,rawset,partitions)
        
       }
  
       case Sources.JDBC => {
 
-        val fields = Fields.get(uid)
+        val fields = Fields.get(req)
         
-        val rawset = new JdbcSource(sc).connect(data,fields)
-        model.buildJDBC(uid,rawset,partitions)
+        val rawset = new JdbcSource(sc).connect(req.data,fields)
+        model.buildJDBC(req,rawset,partitions)
 
       }
       

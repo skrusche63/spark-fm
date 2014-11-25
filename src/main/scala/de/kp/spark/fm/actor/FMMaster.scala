@@ -26,6 +26,8 @@ import akka.util.Timeout
 
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 
+import de.kp.spark.core.model._
+
 import de.kp.spark.fm.Configuration
 import de.kp.spark.fm.model._
 

@@ -18,8 +18,8 @@ package de.kp.spark.fm.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+import de.kp.spark.core.model._
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.redis.RedisCache
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -52,7 +52,7 @@ class FMRegistrar extends BaseActor {
           fields += new Field(name,"double","")
         }
  
-        RedisCache.addFields(req, new Fields(fields.toList))
+        cache.addFields(req, new Fields(fields.toList))
         
         new ServiceResponse("context","register",Map("uid"-> uid),FMStatus.SUCCESS)
         

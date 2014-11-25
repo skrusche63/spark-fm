@@ -20,6 +20,8 @@ package de.kp.spark.fm.actor
 
 import de.kp.spark.fm.FMModel
 
+import de.kp.spark.core.model._
+
 import de.kp.spark.fm.model._
 import de.kp.spark.fm.sink.RedisSink
 

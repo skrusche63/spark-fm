@@ -18,7 +18,8 @@ package de.kp.spark.fm.spec
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.fm.redis.RedisCache
+import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisCache
 
 import scala.xml._
 import scala.collection.mutable.ArrayBuffer
@@ -26,16 +27,17 @@ import scala.collection.mutable.ArrayBuffer
 object Fields extends Serializable {
   
   val path = "features.xml"
+  val cache = new RedisCache()
 
-  def get(uid:String):List[String] = {
+  def get(req:ServiceRequest):List[String] = {
 
     val fields = ArrayBuffer.empty[String]
   
     try {
           
-      if (RedisCache.fieldsExist(uid)) {   
+      if (cache.fieldsExist(req)) {   
         
-        val fieldspec = RedisCache.fields(uid)
+        val fieldspec = cache.fields(req)
         for (field <- fieldspec.items) {
           fields += field.name
         }
