@@ -51,7 +51,7 @@ object Messages extends BaseMessages {
   
 }
 
-object FMStatus {
+object FMStatus extends BaseStatus {
   
   val DATASET:String = "dataset"
     
@@ -59,8 +59,5 @@ object FMStatus {
   val FINISHED:String = "finished"
   
   val FM:String = "fm"
-  
-  val FAILURE:String = "failure"
-  val SUCCESS:String = "success"
     
 }
