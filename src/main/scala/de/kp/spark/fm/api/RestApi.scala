@@ -1,4 +1,4 @@
-package de.kp.spark.fm.rest
+package de.kp.spark.fm.api
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-FM project
@@ -54,7 +54,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   override def actorRefFactory:ActorSystem = system
   
   val (duration,retries,time) = Configuration.actor   
-  val master = system.actorOf(Props(new FMMaster(sc)), name="FMMaster")
+  val master = system.actorOf(Props(new FMMaster(sc)), name="context-master")
  
   def start() {
     RestService.start(routes,system,host,port)

@@ -23,11 +23,15 @@ import java.util.Date
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisClient
 
+import de.kp.spark.fm.Configuration
+
 import scala.collection.JavaConversions._
 
 class RedisSink {
 
-  val client  = RedisClient()
+  val (host,port) = Configuration.redis
+  val client = RedisClient(host,port.toInt)
+
   val service = "context"
   
   def addPolynom(req:ServiceRequest,model:String) {

@@ -1,4 +1,4 @@
-package de.kp.spark.fm.rest
+package de.kp.spark.fm
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-FM project
@@ -18,27 +18,41 @@ package de.kp.spark.fm.rest
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem,Props}
+import com.typesafe.config.ConfigFactory
 
 import de.kp.spark.core.SparkService
-import de.kp.spark.fm.{Configuration}
+import de.kp.spark.fm.api.{AkkaApi,RestApi}
 
-object RestServer extends SparkService {
+object FMService extends SparkService{
   
-  /* Create Spark context */
   private val sc = createCtxLocal("FMContext",Configuration.spark)      
-  
-  private def start(args:Array[String],system:ActorSystem) {
 
-    val (host,port) = Configuration.rest
+  def main(args: Array[String]) {
     
-    /* Start REST API */
-    new RestApi(host,port,system,sc).start()
+    /**
+     * REST API 
+     */
+    val httpSystem = ActorSystem("rest-server")
+    sys.addShutdownHook(httpSystem.shutdown)
+    
+    val (host,port) = Configuration.rest
+    new RestApi(host,port,httpSystem,sc).start()
+ 
+    println("REST API activated.")
+    
+    /**
+     * AKKA API 
+     */
+    val conf:String = "server.conf"
+
+    val akkaSystem = ActorSystem("akka-server",ConfigFactory.load(conf))
+    sys.addShutdownHook(akkaSystem.shutdown)
+    
+    new AkkaApi(akkaSystem,sc).start()
+ 
+    println("AKKA API activated.")
       
   }
-  
-  def main(args: Array[String]) {
-    start(args, ActorSystem("RestServer"))
-  }
-  
+
 }

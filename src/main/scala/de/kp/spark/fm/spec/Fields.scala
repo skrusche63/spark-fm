@@ -21,13 +21,17 @@ package de.kp.spark.fm.spec
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisCache
 
+import de.kp.spark.fm.Configuration
+
 import scala.xml._
 import scala.collection.mutable.ArrayBuffer
 
 object Fields extends Serializable {
   
   val path = "features.xml"
-  val cache = new RedisCache()
+
+  val (host,port) = Configuration.redis
+  val cache = new RedisCache(host,port.toInt)
 
   def get(req:ServiceRequest):List[String] = {
 
