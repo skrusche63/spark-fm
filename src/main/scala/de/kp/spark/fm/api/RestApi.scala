@@ -124,7 +124,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     
   }
   
-  private def doIndex[T](ctx:RequestContext) = doRequest(ctx,"context","index")
+  private def doIndex[T](ctx:RequestContext) = doRequest(ctx,"context","index:feature")
   
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,"context","register")
 
