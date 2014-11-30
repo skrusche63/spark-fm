@@ -18,73 +18,7 @@ package de.kp.spark.fm.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import akka.actor.{ActorRef,Props}
-import akka.pattern.ask
-import akka.util.Timeout
+import de.kp.spark.core.actor.StatusMonitor
+import de.kp.spark.fm.Configuration
 
-import de.kp.spark.core.model._
-import de.kp.spark.fm.model._
-
-import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
-
-class FMMonitor extends BaseActor {
-
-  def receive = {
-
-    case req:ServiceRequest => {
-      
-      val origin = sender    
-      val uid = req.data("uid")
-
-      req.task match {
-       
-        case "status" => {
-          
-          val resp = if (cache.statusExists(req) == false) {           
-            failure(req,Messages.TASK_DOES_NOT_EXIST(uid))           
-          } else {            
-            status(req)
-            
-          }
-           
-          origin ! resp
-          context.stop(self)
-          
-        }
-        
-        case _ => {
-          
-          val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
-          
-          origin ! failure(req,msg)
-          context.stop(self)
-          
-        }
-        
-      }
-      
-    }
-    
-    case _ => {
-      
-      val origin = sender               
-      val msg = Messages.REQUEST_IS_UNKNOWN()          
-          
-      origin ! failure(null,msg)
-      context.stop(self)
-
-    }
-  
-  }
-
-  private def status(req:ServiceRequest):ServiceResponse = {
-    
-    val uid = req.data("uid")
-    val data = Map("uid" -> uid)
-                
-    new ServiceResponse(req.service,req.task,data,cache.status(req))	
-
-  }
-
-}
+class FMMonitor extends StatusMonitor(Configuration)

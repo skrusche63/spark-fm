@@ -37,6 +37,7 @@ import de.kp.spark.fm.spec.{Fields}
  */
 class FeatureSource(@transient sc:SparkContext) {
 
+  private val config = Configuration
   private val model = new FeatureModel(sc)
   
   def get(req:ServiceRequest):RDD[(Int,(Double,SparseVector))] = {
@@ -48,17 +49,15 @@ class FeatureSource(@transient sc:SparkContext) {
     source match {
 
       case Sources.FILE => {
-
-        val path = Configuration.file()
-        
-        val rawset = new FileSource(sc).connect(req.data,path)
+       
+        val rawset = new FileSource(sc).connect(config.file(0),req)
         model.buildFile(req,rawset,partitions)
         
       }
 
       case Sources.ELASTIC => {
        
-       val rawset = new ElasticSource(sc).connect(req.data)
+       val rawset = new ElasticSource(sc).connect(config,req)
        model.buildElastic(req,rawset,partitions)
        
       }
@@ -67,7 +66,7 @@ class FeatureSource(@transient sc:SparkContext) {
 
         val fields = Fields.get(req)
         
-        val rawset = new JdbcSource(sc).connect(req.data,fields)
+        val rawset = new JdbcSource(sc).connect(config,req,fields)
         model.buildJDBC(req,rawset,partitions)
 
       }

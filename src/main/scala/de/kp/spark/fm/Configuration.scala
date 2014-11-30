@@ -21,13 +21,15 @@ package de.kp.spark.fm
 import com.typesafe.config.ConfigFactory
 import org.apache.hadoop.conf.{Configuration => HConf}
 
-object Configuration {
+import de.kp.spark.core.{Configuration => CoreConf}
+
+object Configuration extends CoreConf {
 
     /* Load configuration for router */
   val path = "application.conf"
   val config = ConfigFactory.load(path)
 
-  def actor():(Int,Int,Int) = {
+  override def actor:(Int,Int,Int) = {
   
     val cfg = config.getConfig("actor")
 
@@ -39,7 +41,7 @@ object Configuration {
     
   }
 
-  def elastic():HConf = {
+  override def elastic:HConf = {
   
     val cfg = config.getConfig("elastic")
     val conf = new HConf()                          
@@ -54,21 +56,21 @@ object Configuration {
     
   }
    
-  def file():String = {
+  override def file:List[String] = {
   
     val cfg = config.getConfig("file")
-    cfg.getString("path")   
+    List(cfg.getString("path"))   
     
   }
     
-  def model():String = {
+  def model:String = {
   
     val cfg = config.getConfig("model")
     cfg.getString("base")   
     
   }
 
-  def mysql():(String,String,String,String) = {
+  override def mysql:(String,String,String,String) = {
 
    val cfg = config.getConfig("mysql")
   
@@ -82,7 +84,7 @@ object Configuration {
    
   }
   
-  def redis():(String,String) = {
+  override def redis:(String,String) = {
   
     val cfg = config.getConfig("redis")
     
@@ -93,7 +95,7 @@ object Configuration {
     
   }
 
-  def rest():(String,Int) = {
+  override def rest:(String,Int) = {
       
     val cfg = config.getConfig("rest")
       
@@ -104,7 +106,7 @@ object Configuration {
     
   }
     
-  def spark():Map[String,String] = {
+  override def spark:Map[String,String] = {
   
     val cfg = config.getConfig("spark")
     
