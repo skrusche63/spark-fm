@@ -98,7 +98,7 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
 	  case "register"  => ask(actor("registrar"),req).mapTo[ServiceResponse]
       case "train"  => ask(actor("builder"),req).mapTo[ServiceResponse]
 
-      case "status" => ask(actor("builder"),req).mapTo[ServiceResponse]
+      case "status" => ask(actor("monitor"),req).mapTo[ServiceResponse]
       case "track" => ask(actor("tracker"),req).mapTo[ServiceResponse]
        
       case _ => Future {     
@@ -116,6 +116,8 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
       case "builder" => context.actorOf(Props(new FMBuilder(sc)))
   
       case "indexer" => context.actorOf(Props(new FMIndexer()))
+        
+      case "monitor" => context.actorOf(Props(new FMMonitor()))
         
       case "questor" => context.actorOf(Props(new FMQuestor()))
         
