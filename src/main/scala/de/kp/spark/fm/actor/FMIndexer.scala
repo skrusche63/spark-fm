@@ -19,10 +19,11 @@ package de.kp.spark.fm.actor
  */
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.elastic.{ElasticBuilderFactory => EBF}
+
 import de.kp.spark.core.io.ElasticIndexer
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.io.{ElasticBuilderFactory => EBF}
 
 class FMIndexer extends BaseActor {
   

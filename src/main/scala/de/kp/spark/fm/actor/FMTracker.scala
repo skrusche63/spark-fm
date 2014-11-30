@@ -20,11 +20,12 @@ package de.kp.spark.fm.actor
 
 import java.util.Date
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.core.io.ElasticWriter
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.io.{ElasticBuilderFactory => EBF}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
@@ -97,8 +98,8 @@ class FMTracker extends BaseActor {
     val now = new Date()
     val source = HashMap.empty[String,String]
     
-    source += EBF.SITE_FIELD -> params(EBF.SITE_FIELD)
-    source += EBF.TIMESTAMP_FIELD -> now.getTime().toString    
+    source += Names.SITE_FIELD -> params(Names.SITE_FIELD)
+    source += Names.TIMESTAMP_FIELD -> now.getTime().toString    
  
     /* 
      * Restrict parameters to those that are relevant to feature description;
