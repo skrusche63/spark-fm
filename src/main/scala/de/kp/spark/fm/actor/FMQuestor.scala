@@ -106,7 +106,7 @@ class FMQuestor extends BaseActor {
         
       }
           
-      origin ! Serializer.serializeResponse(response)
+      origin ! response
       context.stop(self)
       
     }
@@ -116,7 +116,7 @@ class FMQuestor extends BaseActor {
       val origin = sender               
       val msg = Messages.REQUEST_IS_UNKNOWN()          
           
-      origin ! Serializer.serializeResponse(failure(null,msg))
+      origin ! failure(null,msg)
       context.stop(self)
 
     }

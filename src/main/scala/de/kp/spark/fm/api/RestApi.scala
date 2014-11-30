@@ -170,19 +170,6 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     body.asInstanceOf[Map[String,String]]
     
   }
-  /**
-   * This method returns the 'raw' body provided with a Http request;
-   * it is e.g. used to access the meta service to register metadata
-   * specifications
-   */
-  private def getBodyAsString(ctx:RequestContext):String = {
-   
-    val httpRequest = ctx.request
-    val httpEntity  = httpRequest.entity    
-
-    httpEntity.data.asString
-    
-  }
   
   private def getRequest(ctx:RequestContext):Map[String,String] = {
 
