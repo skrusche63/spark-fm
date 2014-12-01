@@ -19,51 +19,23 @@ package de.kp.spark.fm.actor
  */
 
 import de.kp.spark.core.model._
-import de.kp.spark.fm.model._
+import de.kp.spark.core.actor.FeatureRegistrar
 
+import de.kp.spark.fm.Configuration
 import scala.collection.mutable.ArrayBuffer
 
-class FMRegistrar extends BaseActor {
+class FMRegistrar extends FeatureRegistrar(Configuration) {
   
-  def receive = {
+  override def buildFields(names:Array[String],types:Array[String]):Fields = {
+
+    val fields = ArrayBuffer.empty[Field]
     
-    case req:ServiceRequest => {
-      val origin = sender    
-      val uid = req.data("uid")
-      
-      val response = try {
-        
-        /* Unpack fields from request and register in Redis instance */
-        val fields = ArrayBuffer.empty[Field]
-
-        /*
-         * ********************************************
-         * 
-         *  "uid" -> 123
-         *  "names" -> "target,feature,feature,feature"
-         *
-         * ********************************************
-         * 
-         * It is important to have the names specified in the order
-         * they are used (later) to retrieve the respective data
-         */
-        val names = req.data("names").split(",")
-        for (name <- names) {
-          fields += new Field(name,"double","")
-        }
- 
-        cache.addFields(req, new Fields(fields.toList))
-        
-        new ServiceResponse("context","register",Map("uid"-> uid),FMStatus.SUCCESS)
-        
-      } catch {
-        case throwable:Throwable => failure(req,throwable.getMessage)
-      }
-      
-      origin ! response
-
+    for (name <- names) {
+      fields += new Field(name,"double","")
     }
-    
+
+    Fields(fields.toList)    
+  
   }
 
 }

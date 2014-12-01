@@ -41,9 +41,9 @@ class FMQuestor extends BaseActor {
 
       val response = req.task.split(":")(1) match {
         
-        case "prediction" => {
+        case "feature" => {
           /*
-           * This request retrieves a set of features and computes the target 
+           * This request provides a set of features and computes the target 
            * (or decision) variable; this refers to a general purpose rating
            * prediction
            */
@@ -84,17 +84,6 @@ class FMQuestor extends BaseActor {
             }
           }
          
-        }
-                 
-        case "recommendation" => {
-          
-          if (sink.polynomExists(uid) == false) {           
-            failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
-            
-          } else {    
-            /* not yet implemented */
-            null
-          }
         }
         
         case _ => {
