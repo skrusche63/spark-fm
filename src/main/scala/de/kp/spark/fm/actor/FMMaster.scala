@@ -91,12 +91,14 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
     req.task.split(":")(0) match {
 
 	  case "get" => ask(actor("questor"),req).mapTo[ServiceResponse]
-	  case "index" => ask(actor("indxer"),req).mapTo[ServiceResponse]
 
-	  case "register"  => ask(actor("registrar"),req).mapTo[ServiceResponse]
-      case "train"  => ask(actor("builder"),req).mapTo[ServiceResponse]
+      case "fields" => ask(actor("fields"),req).mapTo[ServiceResponse]
+	  case "index" => ask(actor("indexer"),req).mapTo[ServiceResponse]
 
-      case "status" => ask(actor("monitor"),req).mapTo[ServiceResponse]
+	  case "register" => ask(actor("registrar"),req).mapTo[ServiceResponse]
+      case "train" => ask(actor("builder"),req).mapTo[ServiceResponse]
+
+      case "status" => ask(actor("status"),req).mapTo[ServiceResponse]
       case "track" => ask(actor("tracker"),req).mapTo[ServiceResponse]
        
       case _ => Future {     
@@ -112,15 +114,17 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
     worker match {
   
       case "builder" => context.actorOf(Props(new FMBuilder(sc)))
+        
+      case "fields" => context.actorOf(Props(new FieldMonitor()))
   
       case "indexer" => context.actorOf(Props(new FMIndexer()))
-        
-      case "monitor" => context.actorOf(Props(new FMMonitor()))
         
       case "questor" => context.actorOf(Props(new FMQuestor()))
         
       case "registrar" => context.actorOf(Props(new FMRegistrar()))
         
+      case "status" => context.actorOf(Props(new StatusMonitor()))
+
       case "tracker" => context.actorOf(Props(new FMTracker()))
       
       case _ => null
