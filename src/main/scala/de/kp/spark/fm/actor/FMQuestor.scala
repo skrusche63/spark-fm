@@ -20,6 +20,7 @@ package de.kp.spark.fm.actor
 
 import de.kp.spark.fm.FMModel
 
+import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
 import de.kp.spark.fm.model._
@@ -37,7 +38,7 @@ class FMQuestor extends BaseActor {
     case req:ServiceRequest => {
       
       val origin = sender    
-      val uid = req.data("uid")
+      val uid = req.data(Names.REQ_UID)
 
       val response = req.task.split(":")(1) match {
         
@@ -47,26 +48,26 @@ class FMQuestor extends BaseActor {
            * (or decision) variable; this refers to a general purpose rating
            * prediction
            */
-          if (sink.polynomExists(uid) == false) {           
+          if (sink.polynomExists(req) == false) {           
             failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
             
           } else {    
             
             /* Retrieve path to polynom for 'uid' from cache */
-            val path = sink.polynom(uid)
+            val path = sink.polynom(req)
             if (path == null) {
               failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
               
             } else {
               
-              if (req.data.contains("features")) {
+              if (req.data.contains(Names.REQ_FEATURES)) {
               
                 try {
                 
                   val model = new FMModel()
                   model.load(path)
                   
-                  val prediction = model.predict(req.data("features").split(",").map(_.toDouble)).toString
+                  val prediction = model.predict(req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)).toString
 
                   val data = Map("uid" -> uid, "prediction" -> prediction)
                   new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)

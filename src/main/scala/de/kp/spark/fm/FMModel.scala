@@ -44,6 +44,11 @@ class FMModel {
     HadoopIO.writeFM(c, v, m, p, path)    
   }
   
+  /**
+   * Load factorization model from Hadoop sequence file;
+   * to this end provide path to file on HDFS, note, that
+   * this path is managed by the Redis instance
+   */
   def load(path:String) {
     
     val (c,v,m,p) = HadoopIO.readFM(path)
@@ -57,6 +62,8 @@ class FMModel {
     
   }
 
+  def factors = (c,v,m,p)
+  
   def predict(data:Array[Double]): Double = {
     
     val k0 = p("k0").asInstanceOf[Boolean]

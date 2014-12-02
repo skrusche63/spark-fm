@@ -36,8 +36,12 @@ object Sources {
 }
 
 object Messages extends BaseMessages {
-  
-  def FM_BUILDING_STARTED(uid:String):String = String.format("""FM building started for uid '%s'.""", uid)
+   
+  def MATRIX_TRAINING_STARTED(uid:String):String = 
+    String.format("""[UID: %s] Matrix training started.""", uid)
+ 
+  def MODEL_TRAINING_STARTED(uid:String):String = 
+    String.format("""[UID: %s] Model training started.""", uid)
  
   def DATA_TO_TRACK_RECEIVED(uid:String):String = String.format("""Data to track received for uid '%s'.""", uid)
   

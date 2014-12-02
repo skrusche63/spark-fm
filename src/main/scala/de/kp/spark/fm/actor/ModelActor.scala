@@ -31,7 +31,7 @@ import de.kp.spark.fm.source.FeatureSource
 
 import de.kp.spark.fm.sink.RedisSink
 
-class FMActor(@transient val sc:SparkContext) extends BaseActor {
+class ModelActor(@transient sc:SparkContext) extends BaseActor {
   
   private val base = Configuration.model
   
@@ -46,12 +46,12 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
 
       if (missing == false) {
         /* Register status */
-        cache.addStatus(req,FMStatus.STARTED)
+        cache.addStatus(req,FMStatus.TRAINING_STARTED)
  
         try {
                    
           val dataset = new FeatureSource(sc).get(req)
-          if (dataset != null) buildFM(req,dataset)
+          if (dataset != null) train(req,dataset)
           
         } catch {
           case e:Exception => cache.addStatus(req,FMStatus.FAILURE)          
@@ -73,10 +73,7 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
     
   }
   
-  private def buildFM(req:ServiceRequest,dataset:RDD[(Int,(Double,SparseVector))]) {
-    
-    /* Update cache */
-    cache.addStatus(req,FMStatus.DATASET)
+  private def train(req:ServiceRequest,dataset:RDD[(Int,(Double,SparseVector))]) {
 
     /* Train polynom (model) */
     val (c,v,m) = FM.trainFromRDD(dataset,req.data)
@@ -85,7 +82,7 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
     val rsme = FM.calculateRSME(sc,req.data,c,v,m)
 
     val now = new Date()
-    val dir = base + "/hmm-" + now.getTime().toString
+    val dir = base + "/model-" + now.getTime().toString
     
     /* Save polynom in directory of file system */
     new FMModel(c,v,m,req.data).save(dir)
@@ -95,10 +92,10 @@ class FMActor(@transient val sc:SparkContext) extends BaseActor {
     sink.addPolynom(req,dir)
          
     /* Update cache */
-    cache.addStatus(req,FMStatus.FINISHED)
+    cache.addStatus(req,FMStatus.TRAINING_FINISHED)
     
     /* Notify potential listeners */
-    notify(req,FMStatus.FINISHED)
+    notify(req,FMStatus.TRAINING_FINISHED)
     
   }
   

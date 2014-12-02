@@ -20,6 +20,8 @@ package de.kp.spark.fm.sink
 
 import java.util.Date
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisClient
 
@@ -31,31 +33,78 @@ class RedisSink {
 
   val (host,port) = Configuration.redis
   val client = RedisClient(host,port.toInt)
-
-  val service = "context"
   
+  /**
+   * Register offset and path to similarity matrix; the similarity
+   * matrix is built from the interaction vectors of a feature set
+   */
+  def addMatrix(req:ServiceRequest,offset:String,matrix:String) {
+   
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "matrix:" + req.data(Names.REQ_UID)
+    val v = "" + timestamp + ":" + offset + ":" + matrix
+    
+    client.zadd(k,timestamp,v)
+    
+  }
+  
+  def matrixExists(req:ServiceRequest):Boolean = {
+
+    val k = "matrix:" + req.data(Names.REQ_UID)
+    client.exists(k)
+    
+  }
+  
+  def matrix(req:ServiceRequest):(String,String) = {
+
+    val k = "matrix:" + req.data(Names.REQ_UID)
+    val matrices = client.zrange(k, 0, -1)
+
+    if (matrices.size() == 0) {
+      null
+    
+    } else {
+      
+      val last = matrices.toList.last
+      val Array(timestamp,offset,matrix) = last.split(":")
+      
+      (offset,matrix)
+      
+    }
+  
+  }
+  
+  /**
+   * The trained factorization (or polynom) model is persisted to the 
+   * HDFS file system; the REDIS instance holds the path to the model.
+   * 
+   * We do not use the service parameter to specify the respective path
+   * as polynom model are exclusively built by the Context-Aware Engine
+   */
   def addPolynom(req:ServiceRequest,model:String) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "polynom:context:" + req.data("uid")
+    val k = "polynom:" + req.data(Names.REQ_UID)
     val v = "" + timestamp + ":" + model
     
     client.zadd(k,timestamp,v)
     
   }
   
-  def polynomExists(uid:String):Boolean = {
+  def polynomExists(req:ServiceRequest):Boolean = {
 
-    val k = "polynom:context:" + uid
+    val k = "polynom:" + req.data(Names.REQ_UID)
     client.exists(k)
     
   }
   
-  def polynom(uid:String):String = {
+  def polynom(req:ServiceRequest):String = {
 
-    val k = "polynom:context:" + uid
+    val k = "polynom:" + req.data(Names.REQ_UID)
     val polynoms = client.zrange(k, 0, -1)
 
     if (polynoms.size() == 0) {

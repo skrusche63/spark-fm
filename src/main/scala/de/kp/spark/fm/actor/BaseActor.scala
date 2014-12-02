@@ -69,7 +69,7 @@ abstract class BaseActor extends Actor with ActorLogging {
       new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
   
     } else {
-      val data = Map("uid" -> uid, "message" -> Messages.FM_BUILDING_STARTED(uid))
+      val data = Map("uid" -> uid, "message" -> Messages.MODEL_TRAINING_STARTED(uid))
       new ServiceResponse(req.service,req.task,data,FMStatus.STARTED)	
   
     }

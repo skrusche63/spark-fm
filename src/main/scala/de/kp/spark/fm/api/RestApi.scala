@@ -99,10 +99,10 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    }
 	  }
     }  ~      
-    path("train") {
+    path("train" / Segment) {subject => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx)
+	      ctx => doTrain(ctx,subject)
 	    }
 	  }
     }
@@ -138,9 +138,41 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register")
 
-  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,service,"train")
+  /**
+   * 'train' requests initiate model building; this comprises either a correlation
+   * matrix on top of a factorization model or a factorization model itself
+   */
+  private def doTrain[T](ctx:RequestContext,subject:String) = {
+    
+    subject match {
+      
+      /* ../train/matrix */
+      case "matrix" => {
+        /**
+         * This request trains a correlation matrix on top of a factorization
+         * model; this matrix can be used to compute similarities between
+         * certain specific features
+         */
+        doRequest(ctx,service,"train:matrix")
+      }
+      /* ../train/model */
+      case "model" => {
+        /**
+         * This request trains a factorization model from a feature-based
+         * dataset and saves this model in a pre-configured directory on
+         * the file system
+         */
+        doRequest(ctx,service,"train:model")
+        
+      }
+        
+      case _ => {}
+    }
+    
+    
+  }
 
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"status")
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track")
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
      

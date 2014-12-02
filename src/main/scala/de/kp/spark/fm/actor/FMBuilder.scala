@@ -21,10 +21,14 @@ package de.kp.spark.fm.actor
 import org.apache.spark.SparkContext
 
 import akka.actor.{ActorRef,Props}
+
 import akka.pattern.ask
 import akka.util.Timeout
 
+import de.kp.spark.core.Names
 import de.kp.spark.core.model._
+
+import de.kp.spark.core.actor.BaseTrainer
 
 import de.kp.spark.fm.Configuration
 import de.kp.spark.fm.model._
@@ -32,61 +36,9 @@ import de.kp.spark.fm.model._
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-class FMBuilder(@transient val sc:SparkContext) extends BaseActor {
-
-  implicit val ec = context.dispatcher
+class FMBuilder(@transient val sc:SparkContext) extends BaseTrainer(Configuration) {
   
-  def receive = {
-
-    case req:ServiceRequest => {
-      
-      val origin = sender    
-      val uid = req.data("uid")
-          
-      val response = validate(req) match {
-            
-        case None => train(req).mapTo[ServiceResponse]            
-        case Some(message) => Future {failure(req,message)}
-            
-      }
-
-      response.onSuccess {
-        case result => {
-              
-          origin ! result
-          context.stop(self)
-              
-        }
-
-      }
-
-      response.onFailure {
-        case throwable => {             
-              
-          val resp = failure(req,throwable.toString)
-              
-          origin ! resp	 
-          context.stop(self)
-              
-        }	  
-      
-      }
-     
-    }
-    
-    case _ => {
-      
-      val origin = sender               
-      val msg = Messages.REQUEST_IS_UNKNOWN()          
-          
-      origin ! failure(null,msg)
-      context.stop(self)
-
-    }
-  
-  }
-  
-  private def train(req:ServiceRequest):Future[Any] = {
+  override def train(req:ServiceRequest):Future[Any] = {
 
     val (duration,retries,time) = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(time).second
@@ -95,34 +47,73 @@ class FMBuilder(@transient val sc:SparkContext) extends BaseActor {
     
   }
 
-  private def validate(req:ServiceRequest):Option[String] = {
+  override def validate(req:ServiceRequest):Option[String] = {
 
-    val uid = req.data("uid")
-    
-    if (cache.statusExists(req)) {            
-      return Some(Messages.TASK_ALREADY_STARTED(uid))   
-    }
-    
-    req.data.get("source") match {
+    val uid = req.data(Names.REQ_UID)
+    req.task.split(":")(1) match {
+      
+      case "matrix" => {
+        /*
+         * This is a training task that builds a correlation
+         * matrix on top of a factorization or polynom model.
+         * 
+         * It must be ensured that the respective model the
+         * previous model build task is finished
+         */
+        if (cache.statusExists(req) == false) {
+          return Some(messages.TASK_DOES_NOT_EXIST(uid))   
+        }
         
-      case None => {
-        return Some(Messages.NO_SOURCE_PROVIDED(uid))       
+        if (cache.status(req) != FMStatus.TRAINING_FINISHED) {
+          return Some(messages.TRAINING_NOT_FINISHED(uid)) 
+        }
+        
       }
+      
+      case "model" => {
+        /*
+         * This is the starting point for all training tasks that
+         * refer to an already existing factorization or polynom
+         * model
+         */
+        if (cache.statusExists(req)) {            
+          return Some(messages.TASK_ALREADY_STARTED(uid))   
+        }
+    
+        req.data.get(Names.REQ_SOURCE) match {
         
-      case Some(source) => {
-        if (Sources.isSource(source) == false) {
-          return Some(Messages.SOURCE_IS_UNKNOWN(uid,source))    
-        }          
+          case None => return Some(messages.NO_SOURCE_PROVIDED(uid))       
+        
+          case Some(source) => {
+            if (Sources.isSource(source) == false) {
+              return Some(messages.SOURCE_IS_UNKNOWN(uid,source))    
+            }          
+          
+          }
+        
+        }
+        
       }
-        
+      
+      case _ => return Some(messages.TASK_IS_UNKNOWN(uid, req.task))
+    
     }
 
     None
     
   }
 
-  private def actor(req:ServiceRequest):ActorRef = {
-     context.actorOf(Props(new FMActor(sc)))
+  override def actor(req:ServiceRequest):ActorRef = {
+    
+    req.task.split(":")(1) match {
+      
+      case "matrix" => context.actorOf(Props(new MatrixActor(sc)))
+      case "model"  => context.actorOf(Props(new ModelActor(sc)))
+      
+      case _ => null
+      
+    }
+    
   }
   
 }
