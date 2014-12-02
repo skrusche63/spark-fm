@@ -18,9 +18,24 @@ package de.kp.spark.fm.model
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import org.json4s._
+
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.{read,write}
+
 import de.kp.spark.core.model._
 
-object Serializer extends BaseSerializer
+case class ScoredField(name:String,score:Double)
+case class SimilarFields(name:String,items:List[ScoredField])
+
+case class Similars(items:List[SimilarFields])
+
+object Serializer extends BaseSerializer {
+  
+  def serializeSimilars(similars:Similars):String = write(similars) 
+  def deserializeSimilars(similars:String):Similars = read[Similars](similars)
+  
+}
 
 object Sources {
 
@@ -42,14 +57,16 @@ object Messages extends BaseMessages {
  
   def MODEL_TRAINING_STARTED(uid:String):String = 
     String.format("""[UID: %s] Model training started.""", uid)
+   
+  def MATRIX_DOES_NOT_EXIST(uid:String):String = 
+    String.format("""[UID: %s] Matrix does not exist.""", uid)
  
-  def DATA_TO_TRACK_RECEIVED(uid:String):String = String.format("""Data to track received for uid '%s'.""", uid)
-  
   def MISSING_FEATURES(uid:String):String = String.format("""Features are missing for uid '%s'.""", uid)
   
   def MISSING_PARAMETERS(uid:String):String = String.format("""Parameters are missing for uid '%s'.""", uid)
   
-  def MODEL_DOES_NOT_EXIST(uid:String):String = String.format("""Model does not exist for uid '%s'.""", uid)
+  def MODEL_DOES_NOT_EXIST(uid:String):String = 
+    String.format("""[UID: %s] Model does not exist.""", uid)
   
 }
 

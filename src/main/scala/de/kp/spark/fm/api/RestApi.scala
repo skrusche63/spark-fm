@@ -112,8 +112,22 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   private def doAdmin[T](ctx:RequestContext,subject:String) = {
     
     subject match {
-      
+      /*
+       * A 'fields' request suppors the retrieval of the field
+       * or metadata specificiations that are associated with
+       * a certain training task (uid).
+       * 
+       * The approach actually supported enables the registration
+       * of field specifications on a per uid basis, i.e. each
+       * task may have its own fields. Requests that have to
+       * refer to the same fields must provide the SAME uid
+       */
       case "fields" => doRequest(ctx,service,subject)
+      /*
+       * A 'status' request supports the retrieval of the status
+       * with respect to a certain training task (uid). The latest
+       * status or all stati of a certain task are returned.
+       */
       case "status" => doRequest(ctx,service,subject)
       
       case _ => {}
@@ -125,9 +139,19 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   private def doGet[T](ctx:RequestContext,subject:String) = {
     
     subject match {
-      
-      case "feature" => doRequest(ctx,"context","get:feature")
-      
+      /*
+       * A 'feature' based request supports target value prediction, i.e.
+       * a feature vectoris provided with the request and the trained 
+       * factorization model is used to determine the associated target
+       */
+      case "feature" => doRequest(ctx,service,"get:feature")
+      /*
+       * A 'similar' request is based on a trained correlation matrix
+       * and determines the top 'k' most similar features to a set of
+       * provided feature names
+       */ 
+      case "similar" => doRequest(ctx,service,"get:similar")
+     
       case _ => {}
       
     }
@@ -148,7 +172,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
       
       /* ../train/matrix */
       case "matrix" => {
-        /**
+        /*
          * This request trains a correlation matrix on top of a factorization
          * model; this matrix can be used to compute similarities between
          * certain specific features
@@ -157,7 +181,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
       }
       /* ../train/model */
       case "model" => {
-        /**
+        /*
          * This request trains a factorization model from a feature-based
          * dataset and saves this model in a pre-configured directory on
          * the file system
@@ -172,9 +196,9 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     
   }
 
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track")
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:feature")
   
-  private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
+  private def doRequest[T](ctx:RequestContext,service:String,task:String) = {
      
     val request = new ServiceRequest(service,task,getRequest(ctx))
     implicit val timeout:Timeout = DurationInt(time).second

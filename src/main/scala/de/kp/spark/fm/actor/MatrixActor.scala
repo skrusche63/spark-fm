@@ -47,12 +47,12 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
       val origin = sender    
       val uid = req.data(Names.REQ_UID)
 
-      val response = if (sink.polynomExists(req) == false) {           
+      val response = if (sink.modelExists(req) == false) {           
         failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
             
       } else {    
           
-        val data = Map("uid" -> uid, "message" -> Messages.MATRIX_TRAINING_STARTED(uid))
+        val data = Map(Names.REQ_UID -> uid, "message" -> Messages.MATRIX_TRAINING_STARTED(uid))
         new ServiceResponse(req.service,req.task,data,FMStatus.TRAINING_STARTED)	
       
       }
@@ -83,9 +83,16 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
   }
 
   private def train(req:ServiceRequest) {
-            
+    
+    /**
+     * The training request must provide a name for the correlation 
+     * matrix to uniquely distinguish this matrix from all others
+     */
+    val name = if (req.data.contains(Names.REQ_NAME)) req.data(Names.REQ_NAME) 
+      else throw new Exception("No name for matrix model provided.")
+    
     /* Retrieve path to polynom for 'uid' from sink */
-    val path = sink.polynom(req)
+    val path = sink.model(req)
     if (path == null) {
       throw new Exception("Model does not exist.")
     }
@@ -115,8 +122,8 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
      * the factorization or polynom model, i.e. we compare features
      * by their interaction with all other features.
      * 
-     * To determine the respective SMatrix we use offsets for
-     * the matrix positions
+     * To determine the respective SMatrix we use offsets for the 
+     * matrix positions
      */
     val offset = block(0)
     
@@ -124,16 +131,17 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
     val matrix = buildMatrix(indexes,m)
 
     /*
-     * Serialize and save correlation matrix
+     * Serialize and save correlation matrix; the base path extended
+     * by matrix name and current timestamp
      */
     val now = new java.util.Date()
-    val dir = base + "/matrix-" + now.getTime().toString
+    val dir = String.format("""%s/matrix/%s/%s""",base,name,now.getTime().toString)
     
     val output = matrix.serialize()
     sc.parallelize(output,1).saveAsTextFile(dir)
     
     /* Put offset and path of matrix to Redis sink */
-    sink.addMatrix(req,offset.toString,dir)
+    sink.addMatrix(req,dir)
          
     /* Update cache */
     cache.addStatus(req,FMStatus.TRAINING_FINISHED)
@@ -150,12 +158,12 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
    */
   private def getBlock(req:ServiceRequest):List[Int] = {
     
-    if (req.data.contains(Names.REQ_NAMES)) {
+    if (req.data.contains(Names.REQ_FIELDS)) {
       /*
        * The feature block has to be determined from a list
        * of provided field names
        */
-      val names = req.data(Names.REQ_NAMES).split(",").toList
+      val names = req.data(Names.REQ_FIELDS).split(",").toList
       /*
        * As a next step the (internal) column or feature index is retrieved;
        * to this end, that field specification must be used from the cache

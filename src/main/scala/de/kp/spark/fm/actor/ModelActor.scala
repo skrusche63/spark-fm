@@ -23,6 +23,8 @@ import org.apache.spark.rdd.RDD
 
 import java.util.Date
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
 
@@ -74,6 +76,12 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
   }
   
   private def train(req:ServiceRequest,dataset:RDD[(Int,(Double,SparseVector))]) {
+    /**
+     * The training request must provide a name for the factorization or 
+     * polynom model to uniquely distinguish this model from all others
+     */
+    val name = if (req.data.contains(Names.REQ_NAME)) req.data(Names.REQ_NAME) 
+      else throw new Exception("No name for factorization model provided.")
 
     /* Train polynom (model) */
     val (c,v,m) = FM.trainFromRDD(dataset,req.data)
@@ -82,14 +90,14 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
     val rsme = FM.calculateRSME(sc,req.data,c,v,m)
 
     val now = new Date()
-    val dir = base + "/model-" + now.getTime().toString
+    val dir = String.format("""%s/model/%s/%s""",base,name,now.getTime().toString)
     
     /* Save polynom in directory of file system */
     new FMModel(c,v,m,req.data).save(dir)
     
     /* Put path to polynom to Redis sink */
     val sink = new RedisSink()
-    sink.addPolynom(req,dir)
+    sink.addModel(req,dir)
          
     /* Update cache */
     cache.addStatus(req,FMStatus.TRAINING_FINISHED)

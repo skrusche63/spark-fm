@@ -38,13 +38,13 @@ class RedisSink {
    * Register offset and path to similarity matrix; the similarity
    * matrix is built from the interaction vectors of a feature set
    */
-  def addMatrix(req:ServiceRequest,offset:String,matrix:String) {
+  def addMatrix(req:ServiceRequest,matrix:String) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "matrix:" + req.data(Names.REQ_UID)
-    val v = "" + timestamp + ":" + offset + ":" + matrix
+    val k = "matrix:" + req.data(Names.REQ_NAME) + ":" + req.data(Names.REQ_UID)
+    val v = "" + timestamp + ":" + matrix
     
     client.zadd(k,timestamp,v)
     
@@ -52,14 +52,14 @@ class RedisSink {
   
   def matrixExists(req:ServiceRequest):Boolean = {
 
-    val k = "matrix:" + req.data(Names.REQ_UID)
+    val k = "matrix:" + req.data(Names.REQ_NAME) + ":" + req.data(Names.REQ_UID)
     client.exists(k)
     
   }
   
-  def matrix(req:ServiceRequest):(String,String) = {
+  def matrix(req:ServiceRequest):String = {
 
-    val k = "matrix:" + req.data(Names.REQ_UID)
+    val k = "matrix:" + req.data(Names.REQ_NAME) + ":" + req.data(Names.REQ_UID)
     val matrices = client.zrange(k, 0, -1)
 
     if (matrices.size() == 0) {
@@ -68,9 +68,9 @@ class RedisSink {
     } else {
       
       val last = matrices.toList.last
-      val Array(timestamp,offset,matrix) = last.split(":")
+      val Array(timestamp,path) = last.split(":")
       
-      (offset,matrix)
+      path
       
     }
   
@@ -83,36 +83,36 @@ class RedisSink {
    * We do not use the service parameter to specify the respective path
    * as polynom model are exclusively built by the Context-Aware Engine
    */
-  def addPolynom(req:ServiceRequest,model:String) {
+  def addModel(req:ServiceRequest, model:String) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "polynom:" + req.data(Names.REQ_UID)
+    val k = "model:" + req.data(Names.REQ_NAME) + ":" + req.data(Names.REQ_UID)
     val v = "" + timestamp + ":" + model
     
     client.zadd(k,timestamp,v)
     
   }
   
-  def polynomExists(req:ServiceRequest):Boolean = {
+  def modelExists(req:ServiceRequest):Boolean = {
 
-    val k = "polynom:" + req.data(Names.REQ_UID)
+    val k = "model:" + req.data(Names.REQ_NAME) + ":" + req.data(Names.REQ_UID)
     client.exists(k)
     
   }
   
-  def polynom(req:ServiceRequest):String = {
+  def model(req:ServiceRequest):String = {
 
-    val k = "polynom:" + req.data(Names.REQ_UID)
-    val polynoms = client.zrange(k, 0, -1)
+    val k = "model:" + req.data(Names.REQ_NAME) + ":" + req.data(Names.REQ_UID)
+    val models = client.zrange(k, 0, -1)
 
-    if (polynoms.size() == 0) {
+    if (models.size() == 0) {
       null
     
     } else {
       
-      val last = polynoms.toList.last
+      val last = models.toList.last
       last.split(":")(1)
       
     }

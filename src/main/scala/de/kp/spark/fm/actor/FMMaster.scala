@@ -26,6 +26,7 @@ import akka.util.Timeout
 
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 
+import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
 import de.kp.spark.fm.Configuration
@@ -34,7 +35,7 @@ import de.kp.spark.fm.model._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future
 
-class FMMaster(@transient val sc:SparkContext) extends BaseActor {
+class FMMaster(@transient sc:SparkContext) extends BaseActor {
   
   val (duration,retries,time) = Configuration.actor   
       
@@ -46,23 +47,32 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
   }
   
   def receive = {
-    
-    case req:String => {
+
+    /*
+     * This request is initiated by the Akka API and supports Context-Aware Analysis
+     * from within an Akka based environment, different to the REST API based request
+     * additional de- and serialization must be performed.
+     */
+    case msg:String => {
 	  	    
 	  val origin = sender
 
-	  val deser = Serializer.deserializeRequest(req)
-	  val response = execute(deser)
+	  val req = Serializer.deserializeRequest(msg)
+	  val response = execute(req)
       
       response.onSuccess {
         case result => origin ! serialize(result)
       }
       response.onFailure {
-        case result => origin ! serialize(failure(deser,Messages.GENERAL_ERROR(deser.data("uid"))))	      
+        case result => origin ! serialize(failure(req,Messages.GENERAL_ERROR(req.data(Names.REQ_UID))))	      
 	  }
       
     }
-     
+    /*
+     *  This request is initiated by the REST API; this interface supports the same
+     *  functionality as for the Akka API; the difference is that de- and serialization
+     *  is not required.
+     */  
     case req:ServiceRequest => {
 	  	    
 	  val origin = sender
@@ -72,7 +82,7 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data("uid")))	      
+        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data(Names.REQ_UID)))	      
 	  }
       
     }
@@ -87,47 +97,28 @@ class FMMaster(@transient val sc:SparkContext) extends BaseActor {
   }
 
   private def execute(req:ServiceRequest):Future[ServiceResponse] = {
-	  
-    req.task.split(":")(0) match {
-
-      case "fields" => ask(actor("fields"),req).mapTo[ServiceResponse]
-	  case "get" => ask(actor("questor"),req).mapTo[ServiceResponse]
-
-	  case "index" => ask(actor("indexer"),req).mapTo[ServiceResponse]
-
-	  case "register" => ask(actor("registrar"),req).mapTo[ServiceResponse]
-      case "status"   => ask(actor("status"),req).mapTo[ServiceResponse]
-
-      case "track" => ask(actor("tracker"),req).mapTo[ServiceResponse]
-      case "train" => ask(actor("builder"),req).mapTo[ServiceResponse]
-
-       
-      case _ => Future {     
-        failure(req,Messages.TASK_IS_UNKNOWN(req.data("uid"),req.task))
-      }
-      
-    }
+	/*
+	 * A request task specifies the genuine task and also 
+	 * an accompanied subtask that describes the information
+	 * element in more detail that is subject of the request
+	 */
+    val task = req.task.split(":")(0)
+    ask(actor(task),req).mapTo[ServiceResponse]
     
   }
   
   private def actor(worker:String):ActorRef = {
     
     worker match {
-  
-      case "builder" => context.actorOf(Props(new FMBuilder(sc)))
-        
-      case "fields" => context.actorOf(Props(new FieldMonitor()))
-  
-      case "indexer" => context.actorOf(Props(new FMIndexer()))
-        
-      case "questor" => context.actorOf(Props(new FMQuestor()))
-        
-      case "registrar" => context.actorOf(Props(new FMRegistrar()))
-        
-      case "status" => context.actorOf(Props(new StatusMonitor()))
-
-      case "tracker" => context.actorOf(Props(new FMTracker()))
-      
+       
+      case "fields"   => context.actorOf(Props(new FieldMonitor()))        
+      case "get"      => context.actorOf(Props(new FMQuestor(sc))) 
+      case "index"    => context.actorOf(Props(new FMIndexer()))        
+      case "register" => context.actorOf(Props(new FMRegistrar()))
+      case "status"   => context.actorOf(Props(new StatusMonitor()))
+      case "track"    => context.actorOf(Props(new FMTracker()))
+      case "train"    => context.actorOf(Props(new FMBuilder(sc)))
+       
       case _ => null
       
     }

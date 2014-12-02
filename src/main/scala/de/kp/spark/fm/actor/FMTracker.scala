@@ -39,7 +39,7 @@ class FMTracker extends BaseActor {
       val origin = sender    
       val uid = req.data("uid")
           
-      val data = Map("uid" -> uid, "message" -> Messages.DATA_TO_TRACK_RECEIVED(uid))
+      val data = Map("uid" -> uid, "message" -> Messages.TRACKED_DATA_RECEIVED(uid))
       val response = new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)	
       
       origin ! response
