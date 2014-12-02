@@ -168,7 +168,7 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
        * As a next step the (internal) column or feature index is retrieved;
        * to this end, that field specification must be used from the cache
        */
-      val fields = cache.fields(req).items     
+      val fields = cache.fields(req)     
       val zipped = fields.zipWithIndex.map(x => (x._2,x._1.name))
      
       zipped.filter(x => names.contains(x._2)).map(_._1).toList

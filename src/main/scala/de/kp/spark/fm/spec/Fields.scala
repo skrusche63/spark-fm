@@ -42,7 +42,7 @@ object Fields extends Serializable {
       if (cache.fieldsExist(req)) {   
         
         val fieldspec = cache.fields(req)
-        for (field <- fieldspec.items) {
+        for (field <- fieldspec) {
           fields += field.name
         }
     

@@ -26,7 +26,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class FMRegistrar extends FeatureRegistrar(Configuration) {
   
-  override def buildFields(names:Array[String],types:Array[String]):Fields = {
+  override def buildFields(names:Array[String],types:Array[String]):List[Field] = {
 
     val fields = ArrayBuffer.empty[Field]
     
@@ -34,7 +34,7 @@ class FMRegistrar extends FeatureRegistrar(Configuration) {
       fields += new Field(name,"double","")
     }
 
-    Fields(fields.toList)    
+    fields.toList   
   
   }
 

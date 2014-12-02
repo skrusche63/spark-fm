@@ -142,7 +142,7 @@ class FMQuestor(@transient sc:SparkContext) extends BaseActor {
                  * As a next step the (internal) column or feature index is re-mapped onto
                  * the external field name
                  */
-                val fields = cache.fields(req).items     
+                val fields = cache.fields(req)     
                 val lookup = fields.zipWithIndex.map(x => (x._2,x._1.name)).toMap
                 
                 val similars = scores.map(x => {
@@ -211,7 +211,7 @@ class FMQuestor(@transient sc:SparkContext) extends BaseActor {
        * As a next step the (internal) column or feature index is retrieved;
        * to this end, that field specification must be used from the cache
        */
-      val fields = cache.fields(req).items     
+      val fields = cache.fields(req)   
       val zipped = fields.zipWithIndex.map(x => (x._2,x._1.name))
      
       zipped.filter(x => names.contains(x._2)).map(_._1).toList
