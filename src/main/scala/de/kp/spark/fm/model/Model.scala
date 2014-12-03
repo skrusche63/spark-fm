@@ -26,11 +26,16 @@ import org.json4s.native.Serialization.{read,write}
 import de.kp.spark.core.model._
 
 case class ScoredField(name:String,score:Double)
+case class ScoredFields(items:List[ScoredField])
+
 case class SimilarFields(name:String,items:List[ScoredField])
 
 case class Similars(items:List[SimilarFields])
 
 object Serializer extends BaseSerializer {
+  
+  def serializeScoredFields(scoredFields:ScoredFields):String = write(scoredFields) 
+  def deserializeScoredFields(scoredFields:String):ScoredFields = read[ScoredFields](scoredFields)
   
   def serializeSimilars(similars:Similars):String = write(similars) 
   def deserializeSimilars(similars:String):Similars = read[Similars](similars)
