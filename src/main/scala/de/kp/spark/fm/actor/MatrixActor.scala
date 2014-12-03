@@ -53,7 +53,7 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
       } else {    
           
         val data = Map(Names.REQ_UID -> uid, "message" -> Messages.MATRIX_TRAINING_STARTED(uid))
-        new ServiceResponse(req.service,req.task,data,FMStatus.TRAINING_STARTED)	
+        new ServiceResponse(req.service,req.task,data,FMStatus.MATRIX_TRAINING_STARTED)	
       
       }
       
@@ -97,7 +97,7 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
       throw new Exception("Model does not exist.")
     }
 
-    cache.addStatus(req,FMStatus.TRAINING_STARTED)
+    cache.addStatus(req,FMStatus.MATRIX_TRAINING_STARTED)
 
     val model = new FMModel()
     model.load(path)
@@ -144,10 +144,10 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
     sink.addMatrix(req,dir)
          
     /* Update cache */
-    cache.addStatus(req,FMStatus.TRAINING_FINISHED)
+    cache.addStatus(req,FMStatus.MATRIX_TRAINING_FINISHED)
     
     /* Notify potential listeners */
-    notify(req,FMStatus.TRAINING_FINISHED)
+    notify(req,FMStatus.MATRIX_TRAINING_FINISHED)
     
   }
   

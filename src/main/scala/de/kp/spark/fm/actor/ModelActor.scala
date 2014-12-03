@@ -41,19 +41,13 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
 
     case req:ServiceRequest => {
       
-      val missing = properties(req)
-      
-      /* Send response to originator of request */
+      val missing = (properties(req) == false)
       sender ! response(req, missing)
 
       if (missing == false) {
-        /* Register status */
-        cache.addStatus(req,FMStatus.TRAINING_STARTED)
  
         try {
-                   
-          val dataset = new FeatureSource(sc).get(req)
-          if (dataset != null) train(req,dataset)
+          train(req)    
           
         } catch {
           case e:Exception => cache.addStatus(req,FMStatus.FAILURE)          
@@ -75,13 +69,20 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
     
   }
   
-  private def train(req:ServiceRequest,dataset:RDD[(Int,(Double,SparseVector))]) {
-    /**
+  private def train(req:ServiceRequest) {
+
+    /*
      * The training request must provide a name for the factorization or 
      * polynom model to uniquely distinguish this model from all others
      */
     val name = if (req.data.contains(Names.REQ_NAME)) req.data(Names.REQ_NAME) 
       else throw new Exception("No name for factorization model provided.")
+
+    /* Register status */
+    cache.addStatus(req,FMStatus.MODEL_TRAINING_STARTED)
+                   
+    val dataset = new FeatureSource(sc).get(req)
+    if (dataset == null) throw new Exception("Data source is empty.")
 
     /* Train polynom (model) */
     val (c,v,m) = FM.trainFromRDD(dataset,req.data)
@@ -100,10 +101,10 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
     sink.addModel(req,dir)
          
     /* Update cache */
-    cache.addStatus(req,FMStatus.TRAINING_FINISHED)
+    cache.addStatus(req,FMStatus.MODEL_TRAINING_FINISHED)
     
     /* Notify potential listeners */
-    notify(req,FMStatus.TRAINING_FINISHED)
+    notify(req,FMStatus.MODEL_TRAINING_FINISHED)
     
   }
   
@@ -137,6 +138,22 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
       }
     }
     
+  }
+  
+  private def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
+    
+    val uid = req.data(Names.REQ_UID)
+    
+    if (missing == true) {
+      val data = Map("message" -> Messages.MISSING_PARAMETERS(uid)) ++ req.data
+      new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
+  
+    } else {
+      val data = Map("message" -> Messages.MODEL_TRAINING_STARTED(uid)) ++ req.data
+      new ServiceResponse(req.service,req.task,data,FMStatus.MODEL_TRAINING_STARTED)	
+  
+    }
+
   }
 
 }

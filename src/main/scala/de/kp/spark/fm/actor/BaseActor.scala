@@ -20,6 +20,8 @@ package de.kp.spark.fm.actor
 
 import akka.actor.{Actor,ActorLogging}
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisCache
 
@@ -38,7 +40,11 @@ abstract class BaseActor extends Actor with ActorLogging {
       new ServiceResponse("","",data,FMStatus.FAILURE)	
       
     } else {
-      val data = Map("uid" -> req.data("uid"), "message" -> message)
+      /*
+       * The request data are also sent back to the requestor to enable
+       * an appropriate evaluation of this response message 
+       */
+      val data = Map("message" -> message) ++ req.data
       new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
     
     }
@@ -50,30 +56,11 @@ abstract class BaseActor extends Actor with ActorLogging {
    */
   protected def notify(req:ServiceRequest,status:String) {
 
-    /* Build message */
-    val data = Map("uid" -> req.data("uid"))
-    val response = new ServiceResponse(req.service,req.task,data,status)	
-    
-    /* Notify listeners */
+    val response = new ServiceResponse(req.service,req.task,req.data,status)	
     val message = Serializer.serializeResponse(response)    
+
     RemoteContext.notify(message)
     
-  }
-  
-  protected def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
-    
-    val uid = req.data("uid")
-    
-    if (missing == true) {
-      val data = Map("uid" -> uid, "message" -> Messages.MISSING_PARAMETERS(uid))
-      new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
-  
-    } else {
-      val data = Map("uid" -> uid, "message" -> Messages.MODEL_TRAINING_STARTED(uid))
-      new ServiceResponse(req.service,req.task,data,FMStatus.STARTED)	
-  
-    }
-
   }
 
   protected def serialize(resp:ServiceResponse) = Serializer.serializeResponse(resp)
