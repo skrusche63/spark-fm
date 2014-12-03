@@ -26,16 +26,17 @@ import java.util.Date
 import de.kp.spark.core.Names
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisDB
+
 import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
 
 import de.kp.spark.fm.model._
 import de.kp.spark.fm.source.FeatureSource
 
-import de.kp.spark.fm.sink.RedisSink
-
 class ModelActor(@transient sc:SparkContext) extends BaseActor {
   
   private val base = Configuration.model
+  val sink = new RedisDB(host,port.toInt)
   
   def receive = {
 
@@ -97,7 +98,6 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
     new FMModel(c,v,m,req.data).save(dir)
     
     /* Put path to polynom to Redis sink */
-    val sink = new RedisSink()
     sink.addModel(req,dir)
          
     /* Update cache */

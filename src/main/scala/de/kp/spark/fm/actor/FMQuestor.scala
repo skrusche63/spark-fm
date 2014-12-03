@@ -25,18 +25,17 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.math.SMatrix
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisDB
 
 import de.kp.spark.fm.FMModel
-
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.sink.RedisSink
 
 import scala.collection.JavaConversions._
 
 class FMQuestor(@transient sc:SparkContext) extends BaseActor {
 
   implicit val ec = context.dispatcher
-  val sink = new RedisSink()
+  val sink = new RedisDB(host,port.toInt)
   
   def receive = {
 

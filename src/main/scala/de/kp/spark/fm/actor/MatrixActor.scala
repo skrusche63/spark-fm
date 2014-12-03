@@ -24,11 +24,11 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.math.{CosineSimilarity,SMatrix}
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisDB
 
 import de.kp.spark.fm.{Configuration,DenseMatrix,FMModel}
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.sink.RedisSink
 
 /**
  * The MatrixActor initiates the training of a correlation or
@@ -37,7 +37,7 @@ import de.kp.spark.fm.sink.RedisSink
  */
 class MatrixActor(@transient sc:SparkContext) extends BaseActor {
   
-  val sink = new RedisSink()  
+  val sink = new RedisDB(host,port.toInt)
   private val base = Configuration.model
  
   def receive = {
