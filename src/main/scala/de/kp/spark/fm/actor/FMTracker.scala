@@ -18,84 +18,19 @@ package de.kp.spark.fm.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Date
-
 import de.kp.spark.core.Names
+import de.kp.spark.core.actor.BaseTracker
 
-import de.kp.spark.core.model._
-import de.kp.spark.core.io.ElasticWriter
-
-import de.kp.spark.fm.model._
+import de.kp.spark.fm.Configuration
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 
-class FMTracker extends BaseActor {
+class FMTracker extends BaseTracker(Configuration) {
   
-  def receive = {
+  override def prepareFeature(params:Map[String,String]):java.util.Map[String,Object] = {
     
-    case req:ServiceRequest => {
-     
-      val origin = sender    
-      val uid = req.data("uid")
-          
-      val data = Map("uid" -> uid, "message" -> Messages.TRACKED_DATA_RECEIVED(uid))
-      val response = new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)	
-      
-      origin ! response
-          
-      createTargetedPoint(req)
-      context.stop(self)
-          
-    }
-    
-  }
-  
-  private def createTargetedPoint(req:ServiceRequest) {
-          
-    try {
-
-      val index   = req.data("index")
-      val mapping = req.data("type")
-    
-      val writer = new ElasticWriter()
-    
-      val readyToWrite = writer.open(index,mapping)
-      if (readyToWrite == false) {
-      
-        writer.close()
-      
-        val msg = String.format("""Opening index '%s' and mapping '%s' for write failed.""",index,mapping)
-        throw new Exception(msg)
-      
-      } else {
-      
-        /* Prepare data */
-        val source = prepareTargetedPoint(req.data)
-        /*
-         * Writing this source to the respective index throws an
-         * exception in case of an error; note, that the writer is
-         * automatically closed 
-         */
-        writer.write(index, mapping, source)
-        
-      }
-      
-    } catch {
-        
-      case e:Exception => {
-        log.error(e, e.getMessage())
-      }
-      
-    } finally {
-
-    }
-    
-  }
-  
-  private def prepareTargetedPoint(params:Map[String,String]):java.util.Map[String,Object] = {
-    
-    val now = new Date()
+    val now = new java.util.Date()
     val source = HashMap.empty[String,String]
     
     source += Names.SITE_FIELD -> params(Names.SITE_FIELD)
