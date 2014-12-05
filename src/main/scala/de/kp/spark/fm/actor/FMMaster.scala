@@ -27,6 +27,8 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 
 import de.kp.spark.core.Names
+
+import de.kp.spark.core.actor._
 import de.kp.spark.core.model._
 
 import de.kp.spark.fm.Configuration
@@ -111,13 +113,16 @@ class FMMaster(@transient sc:SparkContext) extends BaseActor {
     
     worker match {
        
-      case "fields"   => context.actorOf(Props(new FieldMonitor()))        
-      case "get"      => context.actorOf(Props(new FMQuestor(sc))) 
-      case "index"    => context.actorOf(Props(new FMIndexer()))        
+      case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))        
       case "register" => context.actorOf(Props(new FMRegistrar()))
-      case "status"   => context.actorOf(Props(new StatusMonitor()))
-      case "track"    => context.actorOf(Props(new FMTracker()))
+      
+      case "index"    => context.actorOf(Props(new FMIndexer()))        
+      case "track"    => context.actorOf(Props(new BaseTracker(Configuration)))
+
+      case "status"   => context.actorOf(Props(new StatusQuestor(Configuration)))
       case "train"    => context.actorOf(Props(new FMBuilder(sc)))
+
+      case "get"      => context.actorOf(Props(new FMQuestor(sc))) 
        
       case _ => null
       
