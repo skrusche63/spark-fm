@@ -26,8 +26,7 @@ import de.kp.spark.core.math.{CosineSimilarity,SMatrix}
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
 
-import de.kp.spark.fm.{Configuration,DenseMatrix,FMModel}
-
+import de.kp.spark.fm.{Configuration,DenseMatrix,FeatureHandler,FMModel}
 import de.kp.spark.fm.model._
 
 /**
@@ -115,7 +114,7 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
      * approach is choosen to keep the Context-Analysis engine as
      * generic as possible  
      */
-    val block = getBlock(req)
+    val columns = new FeatureHandler(req).columns.sorted
     
     /*
      * We build a similarity matrix from the interaction part (m) of
@@ -125,9 +124,9 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
      * To determine the respective SMatrix we use offsets for the 
      * matrix positions
      */
-    val offset = block(0)
+    val offset = columns(0)
     
-    val indexes = block.map(x => x - offset)     
+    val indexes = columns.map(x => x - offset)     
     val matrix = buildMatrix(indexes,m)
 
     /*
@@ -148,42 +147,6 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
     
     /* Notify potential listeners */
     notify(req,FMStatus.MATRIX_TRAINING_FINISHED)
-    
-  }
-  
-  /**
-   * Determine index for the provided field names; this internal method
-   * does not support explicit error handling and throws an exception
-   * if fields for the provided names do not exist
-   */
-  private def getBlock(req:ServiceRequest):List[Int] = {
-    
-    if (req.data.contains(Names.REQ_FIELDS)) {
-      /*
-       * The feature block has to be determined from a list
-       * of provided field names
-       */
-      val names = req.data(Names.REQ_FIELDS).split(",").toList
-      /*
-       * As a next step the (internal) column or feature index is retrieved;
-       * to this end, that field specification must be used from the cache
-       */
-      val fields = cache.fields(req)     
-      val zipped = fields.zipWithIndex.map(x => (x._2,x._1.name))
-     
-      zipped.filter(x => names.contains(x._2)).map(_._1).toList
-    
-    } else if (req.data.contains(Names.REQ_START) && req.data.contains(Names.REQ_END)) {
-
-      val start = req.data(Names.REQ_START).toInt
-      val end   = req.data(Names.REQ_END).toInt
-      
-      Range(start,end+1).toList
-      
-    } else {
-      throw new Exception("Provided parameters do not permit any data processing.")
-    }
-   
     
   }
   

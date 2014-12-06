@@ -63,32 +63,45 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   }
 
   private def routes:Route = {
-
-    path("admin" / Segment) {subject =>  
+    /*
+     * A 'fields' request supports the retrieval of the field
+     * or metadata specificiations that are associated with
+     * a certain training task (uid).
+     * 
+     * The approach actually supported enables the registration
+     * of field specifications on a per uid basis, i.e. each
+     * task may have its own fields. Requests that have to
+     * refer to the same fields must provide the SAME uid
+     */
+    path("fields") {  
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doAdmin(ctx,subject)
+	      ctx => doFields(ctx)
 	    }
 	  }
     }  ~  
-    path("get" / Segment) {subject => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,subject)
-	    }
-	  }
-    }  ~ 
-    path("index") { 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doIndex(ctx)
-	    }
-	  }
-    }  ~ 
+    /*
+     * A 'register' request supports the registration of a field
+     * or metadata specification that describes the fields used
+     * to span the training dataset.
+     */
     path("register") { 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doRegister(ctx)
+	    }
+	  }
+    }  ~ 
+    /*
+     * 'index' and 'track' requests refer to the tracking functionality
+     * of the Context-Aware Analysis engine; while 'index' prepares a
+     * certain Elasticsearch index, 'track' is used to gather training
+     * data.
+     */
+    path("index") { 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doIndex(ctx)
 	    }
 	  }
     }  ~ 
@@ -99,6 +112,43 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    }
 	  }
     }  ~      
+    /*
+     * A 'predict' request type supports target value prediction, i.e.
+     * a feature vector is provided with the request and the trained 
+     * factorization model is used to determine the associated target
+     */
+    path("predict") { 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doPredict(ctx)
+	    }
+	  }
+    }  ~ 
+    /*
+     * A 'similar' request type supports the retrieval of the top most
+     * similar features with respect to a set of provided features;
+     * note, that the features provided must coincide with the data
+     * structure of the feature vectors used in the training dataset.
+     */
+    path("similar") { 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doSimilar(ctx)
+	    }
+	  }
+    }  ~ 
+    /*
+     * A 'status' request supports the retrieval of the status
+     * with respect to a certain training task (uid). The latest
+     * status or all stati of a certain task are returned.
+     */
+    path("status" / Segment) {subject =>  
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,subject)
+	    }
+	  }
+    }  ~ 
     path("train" / Segment) {subject => 
 	  post {
 	    respondWithStatus(OK) {
@@ -108,59 +158,62 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     }
 
   }
+  /**
+   * 'predict' requests refer to the retrieval of a predicted target
+   * variable for a certain feature vector; the respective vector must
+   * have the same format as the vectors used in the training dataset
+   */
+  private def doPredict[T](ctx:RequestContext) = doRequest(ctx,service,"predict:feature")
+  /**
+   * 'similar' requests refer to the retrieval of features that are
+   * most similar to a set of provided features; note, that these
+   * features must be subset of those, that have been used to build
+   * the correlation matrix.
+   */
+  private def doSimilar[T](ctx:RequestContext) = doRequest(ctx,service,"similar:feature")
+
+  /**
+   * 'fields' and 'register' requests refer to the metadata management 
+   * of the Context-Aware Analysis engine; for a certain task (uid) and 
+   * a specific model (name), a specification of the respective data fields 
+   * can be registered and retrieved from a Redis database.
+   */
+  private def doFields[T](ctx:RequestContext) = doRequest(ctx,service,"fields:feature")
   
-  private def doAdmin[T](ctx:RequestContext,subject:String) = {
-    
-    subject match {
-      /*
-       * A 'fields' request suppors the retrieval of the field
-       * or metadata specificiations that are associated with
-       * a certain training task (uid).
-       * 
-       * The approach actually supported enables the registration
-       * of field specifications on a per uid basis, i.e. each
-       * task may have its own fields. Requests that have to
-       * refer to the same fields must provide the SAME uid
-       */
-      case "fields" => doRequest(ctx,service,subject)
-      /*
-       * A 'status' request supports the retrieval of the status
-       * with respect to a certain training task (uid). The latest
-       * status or all stati of a certain task are returned.
-       */
-      case "status" => doRequest(ctx,service,subject)
-      
-      case _ => {}
-      
-    }
-    
-  }
-  
-  private def doGet[T](ctx:RequestContext,subject:String) = {
-    
-    subject match {
-      /*
-       * A 'feature' based request supports target value prediction, i.e.
-       * a feature vectoris provided with the request and the trained 
-       * factorization model is used to determine the associated target
-       */
-      case "feature" => doRequest(ctx,service,"get:feature")
-      /*
-       * A 'similar' request is based on a trained correlation matrix
-       * and determines the top 'k' most similar features to a set of
-       * provided feature names
-       */ 
-      case "similar" => doRequest(ctx,service,"get:similar")
-     
-      case _ => {}
-      
-    }
-    
-  }
-  
+  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register:feature")
+
+  /**
+   * 'index' and 'track' reflect the interface to the tracking functionality
+   * of the Context-Aware Analysis engine.
+   */
   private def doIndex[T](ctx:RequestContext) = doRequest(ctx,service,"index:feature")
+
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:feature")
+
+  /**
+   * 'status' is an administration request to determine whether a certain model
+   * or matrix building task has been finished or not; the only parameter required 
+   * for status requests is the unique identifier of a certain task
+   */
+  private def doStatus[T](ctx:RequestContext,subject:String) = {
+    
+    subject match {
+      /*
+       * Retrieve the 'latest' status information about a certain
+       * data mining or model building task.
+       */
+      case "latest" => doRequest(ctx,service,"status:latest")
+      /*
+       * Retrieve 'all' stati assigned to a certain data mining
+       * or model building task.
+       */
+      case "all" => doRequest(ctx,service,"status:all")
+      
+      case _ => {/* do nothing */}
+    
+    }
   
-  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register")
+  }
 
   /**
    * 'train' requests initiate model building; this comprises either a correlation
@@ -195,8 +248,6 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     
     
   }
-
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:feature")
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String) = {
      

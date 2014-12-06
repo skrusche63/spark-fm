@@ -122,7 +122,8 @@ class FMMaster(@transient sc:SparkContext) extends BaseActor {
       case "status"   => context.actorOf(Props(new StatusQuestor(Configuration)))
       case "train"    => context.actorOf(Props(new FMBuilder(sc)))
 
-      case "get"      => context.actorOf(Props(new FMQuestor(sc))) 
+      case "predict"  => context.actorOf(Props(new FMPredictor(sc))) 
+      case "similar"  => context.actorOf(Props(new FMSimilar(sc))) 
        
       case _ => null
       

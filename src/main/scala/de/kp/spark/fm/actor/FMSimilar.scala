@@ -27,12 +27,12 @@ import de.kp.spark.core.math.SMatrix
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
 
-import de.kp.spark.fm.FMModel
+import de.kp.spark.fm.FeatureHandler
 import de.kp.spark.fm.model._
 
 import scala.collection.JavaConversions._
 
-class FMQuestor(@transient sc:SparkContext) extends BaseActor {
+class FMSimilar(@transient sc:SparkContext) extends BaseActor {
 
   implicit val ec = context.dispatcher
   val sink = new RedisDB(host,port.toInt)
@@ -44,61 +44,11 @@ class FMQuestor(@transient sc:SparkContext) extends BaseActor {
       val origin = sender    
       val uid = req.data(Names.REQ_UID)
       
-      val topic = req.task.split(":")(1)
+      val Array(task,topic) = req.task.split(":")
       val response = topic match {
-        
+       
         case "feature" => {
           /*
-           * This request provides a set of features and computes the target 
-           * (or decision) variable; this refers to a general purpose rating
-           * prediction
-           */
-          if (sink.modelExists(req) == false) {           
-            failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
-            
-          } else {    
-            
-            /* 
-             * Retrieve path to polynom: a model is uniquely determined
-             * by the model name and the respective task identifier (uid);
-             * this approach enables to train different models for the 
-             * same uid
-             */
-            val path = sink.model(req)
-            if (path == null) {
-              failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
-              
-            } else {
-              
-              if (req.data.contains(Names.REQ_FEATURES)) {
-              
-                try {
-                
-                  val model = new FMModel()
-                  model.load(path)
-                  
-                  val prediction = model.predict(req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)).toString
-
-                  val data = Map(Names.REQ_UID -> uid, topic -> prediction)
-                  new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
-                
-                } catch {
-                  case e:Exception => {
-                    failure(req,e.toString())                   
-                  }
-                }
-                
-              } else {
-                failure(req,Messages.MISSING_FEATURES(uid))
-                
-              }
-            }
-          }
-         
-        }
-         
-        case "item" => {
-          /*
            * This request provides a certain feature index, e.g. for a user
            * or an item and returns the top most similar features
            */
@@ -120,8 +70,10 @@ class FMQuestor(@transient sc:SparkContext) extends BaseActor {
               
               } else {
                 
-                val similarity = loadMatrix(path)            
-                val block = getBlock(req).sorted
+                val handler = new FeatureHandler(req)
+                val similarity = loadMatrix(path)   
+                
+                val columns = handler.columns.sorted
                 /*
                  * We have built the similarity matrix from the interaction 
                  * part (m) of the factorization or polynom model, i.e. we 
@@ -130,81 +82,8 @@ class FMQuestor(@transient sc:SparkContext) extends BaseActor {
                  * To determine the respective SMatrix we use offsets for the 
                  * matrix positions
                  */
-                val offset = block(0)
-                val indexes = block.map(x => x - offset)     
-                
-                /*
-                 * For all fields provided compute the top 'k' similar fields
-                 */
-                val total = req.data(Names.REQ_TOTAL).toInt
-                val scores = indexes.flatMap(index => similarity.getHighest(index,total))
-                
-                val highest = scores.sortBy(x => -x._2).take(total)
-                /*
-                 * As a next step the (internal) column or feature index is re-mapped onto
-                 * the external field name
-                 */
-                val fields = cache.fields(req)     
-                val lookup = fields.zipWithIndex.map(x => (x._2,x._1.name)).toMap
-                
-                val scoredFields = highest.map(x => {
-                  
-                  val name = lookup(x._1 + offset)
-                  ScoredField(name,x._2)
-                  
-                })
-                
-                val result = Serializer.serializeScoredFields(ScoredFields(scoredFields))
-                val data = Map(Names.REQ_UID -> uid, topic-> result)
-                  
-                new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
-                 
-              }
-           
-            } catch {
-              case e:Exception => {
-                failure(req,e.toString())                   
-              }
-            }
-              
-          }
-        }
-       
-        case "similar" => {
-          /*
-           * This request provides a certain feature index, e.g. for a user
-           * or an item and returns the top most similar features
-           */
-          if (sink.matrixExists(req) == false) {
-            failure(req,Messages.MATRIX_DOES_NOT_EXIST(uid))
-            
-          } else {
-            
-            try {
-              /* 
-               * Retrieve path to matrix: a matrix is uniquely determined
-               * by the matrix name and the respective task identifier (uid);
-               * this approach enables to train different matrices for the 
-               * same uid
-               */
-              val path = sink.matrix(req)
-              if (path == null) {
-                failure(req,Messages.MATRIX_DOES_NOT_EXIST(uid))
-              
-              } else {
-                
-                val similarity = loadMatrix(path)            
-                val block = getBlock(req).sorted
-                /*
-                 * We have built the similarity matrix from the interaction 
-                 * part (m) of the factorization or polynom model, i.e. we 
-                 * compare features by their interaction with all other features.
-                 * 
-                 * To determine the respective SMatrix we use offsets for the 
-                 * matrix positions
-                 */
-                val offset = block(0)
-                val indexes = block.map(x => x - offset)     
+                val offset = columns(0)
+                val indexes = columns.map(x => x - offset)     
                 
                 /*
                  * For all fields provided compute the top 'k' similar fields
@@ -215,9 +94,7 @@ class FMQuestor(@transient sc:SparkContext) extends BaseActor {
                  * As a next step the (internal) column or feature index is re-mapped onto
                  * the external field name
                  */
-                val fields = cache.fields(req)     
-                val lookup = fields.zipWithIndex.map(x => (x._2,x._1.name)).toMap
-                
+                val lookup = handler.lookup                
                 val similars = scores.map(x => {
                   
                   val field = lookup(x._1 + offset)
