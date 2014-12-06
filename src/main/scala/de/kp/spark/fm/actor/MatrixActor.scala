@@ -51,7 +51,7 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
             
       } else {    
           
-        val data = Map(Names.REQ_UID -> uid, "message" -> Messages.MATRIX_TRAINING_STARTED(uid))
+        val data = Map(Names.REQ_UID -> uid, Names.REQ_MESSAGE -> Messages.MATRIX_TRAINING_STARTED(uid))
         new ServiceResponse(req.service,req.task,data,FMStatus.MATRIX_TRAINING_STARTED)	
       
       }

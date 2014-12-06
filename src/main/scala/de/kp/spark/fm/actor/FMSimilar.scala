@@ -110,7 +110,7 @@ class FMSimilar(@transient sc:SparkContext) extends BaseActor {
                 })
                 
                 val result = Serializer.serializeSimilars(Similars(similars))
-                val data = Map(Names.REQ_UID -> uid, topic -> result)
+                val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> result)
                   
                 new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
                  

@@ -18,6 +18,7 @@ package de.kp.spark.fm.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
 import de.kp.spark.core.actor.BaseIndexer
@@ -27,8 +28,8 @@ class FMIndexer extends BaseIndexer(Configuration) {
  
   override def getSpec(req:ServiceRequest):(List[String],List[String]) = {
 
-    val names = req.data("names").split(",").toList
-    val types = req.data("types").split(",").toList
+    val names = req.data(Names.REQ_NAMES).split(",").toList
+    val types = req.data(Names.REQ_TYPES).split(",").toList
     
     (names,types)
     

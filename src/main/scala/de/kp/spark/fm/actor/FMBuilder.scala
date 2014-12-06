@@ -50,7 +50,9 @@ class FMBuilder(@transient val sc:SparkContext) extends BaseTrainer(Configuratio
   override def validate(req:ServiceRequest):Option[String] = {
 
     val uid = req.data(Names.REQ_UID)
-    req.task.split(":")(1) match {
+    val Array(task,topic) = req.task.split(":")
+    
+    topic match {
       
       case "matrix" => {
         /*
@@ -105,7 +107,8 @@ class FMBuilder(@transient val sc:SparkContext) extends BaseTrainer(Configuratio
 
   override def actor(req:ServiceRequest):ActorRef = {
     
-    req.task.split(":")(1) match {
+    val Array(task,topic) = req.task.split(":")
+    topic match {
       
       case "matrix" => context.actorOf(Props(new MatrixActor(sc)))
       case "model"  => context.actorOf(Props(new ModelActor(sc)))

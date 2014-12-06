@@ -76,7 +76,7 @@ class FMPredictor(@transient sc:SparkContext) extends BaseActor {
                   
                   val prediction = model.predict(req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)).toString
 
-                  val data = Map(Names.REQ_UID -> uid, task -> prediction)
+                  val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> prediction)
                   new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
                 
                 } catch {

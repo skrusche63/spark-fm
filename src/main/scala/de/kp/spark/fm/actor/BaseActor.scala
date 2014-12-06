@@ -36,7 +36,7 @@ abstract class BaseActor extends Actor with ActorLogging {
   protected def failure(req:ServiceRequest,message:String):ServiceResponse = {
     
     if (req == null) {
-      val data = Map("message" -> message)
+      val data = Map(Names.REQ_MESSAGE -> message)
       new ServiceResponse("","",data,FMStatus.FAILURE)	
       
     } else {
@@ -44,7 +44,7 @@ abstract class BaseActor extends Actor with ActorLogging {
        * The request data are also sent back to the requestor to enable
        * an appropriate evaluation of this response message 
        */
-      val data = Map("message" -> message) ++ req.data
+      val data = Map(Names.REQ_MESSAGE -> message) ++ req.data
       new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
     
     }
