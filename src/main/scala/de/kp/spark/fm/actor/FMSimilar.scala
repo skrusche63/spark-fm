@@ -90,22 +90,10 @@ class FMSimilar(@transient sc:SparkContext) extends BaseActor {
                  */
                 val total = req.data(Names.REQ_TOTAL).toInt
                 val scores = indexes.map(index => (index,similarity.getHighest(index,total)))
-                /*
-                 * As a next step the (internal) column or feature index is re-mapped onto
-                 * the external field name
-                 */
-                val lookup = handler.lookup                
                 val similars = scores.map(x => {
-                  
-                  val field = lookup(x._1 + offset)
-                  val related = x._2.map(v => {
-                    
-                    val name = lookup(v._1 + offset)
-                    ScoredField(name,v._2)
-                    
-                  })
-                  
-                  SimilarFields(field,related)
+
+                  val scoredColumns = x._2.map(v => ScoredColumn(v._1 + offset,v._2))
+                  SimilarColumns(x._1 + offset,scoredColumns)
                   
                 })
                 

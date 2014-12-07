@@ -21,21 +21,8 @@ package de.kp.spark.fm
 import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
-import de.kp.spark.core.redis.RedisCache
-
 class FeatureHandler(req:ServiceRequest) {
 
-  private val (host,port) = Configuration.redis
-  private val cache = new RedisCache(host,port.toInt)
-
-  private val fields = cache.fields(req)   
-  private val zipped = fields.zipWithIndex.map(x => (x._2,x._1.name))
-
-  /**
-   * Determine index for the provided field names; this internal method
-   * does not support explicit error handling and throws an exception
-   * if fields for the provided names do not exist
-   */  
   def columns:List[Int] = {
     
     if (req.data.contains(Names.REQ_COLUMNS)) {
@@ -44,14 +31,6 @@ class FeatureHandler(req:ServiceRequest) {
        * of provided column positions
        */
       req.data(Names.REQ_COLUMNS).split(",").map(_.toInt).toList
-  
-    } else if (req.data.contains(Names.REQ_FIELDS)) {
-      /*
-       * The feature block has to be determined from a list
-       * of provided field names
-       */
-      val names = req.data(Names.REQ_FIELDS).split(",").toList
-      zipped.filter(x => names.contains(x._2)).map(_._1).toList
     
     } else if (req.data.contains(Names.REQ_START) && req.data.contains(Names.REQ_END)) {
 
@@ -66,7 +45,5 @@ class FeatureHandler(req:ServiceRequest) {
    
     
   }
-
-  def lookup = zipped.toMap
   
 }
