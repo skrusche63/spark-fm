@@ -116,7 +116,7 @@ class FMMaster(@transient sc:SparkContext) extends BaseActor {
       case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))        
       case "register" => context.actorOf(Props(new FMRegistrar()))
       
-      case "index"    => context.actorOf(Props(new FMIndexer()))        
+      case "index"    => context.actorOf(Props(new BaseIndexer(Configuration)))        
       case "track"    => context.actorOf(Props(new BaseTracker(Configuration)))
 
       case "status"   => context.actorOf(Props(new StatusQuestor(Configuration)))

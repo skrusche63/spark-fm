@@ -19,12 +19,12 @@ package de.kp.spark.fm.actor
  */
 
 import de.kp.spark.core.model._
-import de.kp.spark.core.actor.FeatureRegistrar
+import de.kp.spark.core.actor.BaseRegistrar
 
 import de.kp.spark.fm.Configuration
 import scala.collection.mutable.ArrayBuffer
 
-class FMRegistrar extends FeatureRegistrar(Configuration) {
+class FMRegistrar extends BaseRegistrar(Configuration) {
   
   override def buildFields(names:Array[String],types:Array[String]):List[Field] = {
 
