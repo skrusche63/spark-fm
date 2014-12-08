@@ -19,97 +19,16 @@ package de.kp.spark.fm.actor
 */
 
 import org.apache.spark.SparkContext
-
 import akka.actor.{ActorRef,Props}
-import akka.pattern.ask
-import akka.util.Timeout
-
-import akka.actor.{OneForOneStrategy, SupervisorStrategy}
-
-import de.kp.spark.core.Names
 
 import de.kp.spark.core.actor._
 import de.kp.spark.core.model._
 
 import de.kp.spark.fm.Configuration
-import de.kp.spark.fm.model._
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.Future
-
-class FMMaster(@transient sc:SparkContext) extends BaseActor {
+class FMMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
   
-  val (duration,retries,time) = Configuration.actor   
-      
-  implicit val ec = context.dispatcher
-  implicit val timeout:Timeout = DurationInt(time).second
-
-  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(duration).minutes) {
-    case _ : Exception => SupervisorStrategy.Restart
-  }
-  
-  def receive = {
-
-    /*
-     * This request is initiated by the Akka API and supports Context-Aware Analysis
-     * from within an Akka based environment, different to the REST API based request
-     * additional de- and serialization must be performed.
-     */
-    case msg:String => {
-	  	    
-	  val origin = sender
-
-	  val req = Serializer.deserializeRequest(msg)
-	  val response = execute(req)
-      
-      response.onSuccess {
-        case result => origin ! serialize(result)
-      }
-      response.onFailure {
-        case result => origin ! serialize(failure(req,Messages.GENERAL_ERROR(req.data(Names.REQ_UID))))	      
-	  }
-      
-    }
-    /*
-     *  This request is initiated by the REST API; this interface supports the same
-     *  functionality as for the Akka API; the difference is that de- and serialization
-     *  is not required.
-     */  
-    case req:ServiceRequest => {
-	  	    
-	  val origin = sender
-
-	  val response = execute(req)
-      response.onSuccess {
-        case result => origin ! result
-      }
-      response.onFailure {
-        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data(Names.REQ_UID)))	      
-	  }
-      
-    }
- 
-    case _ => {
-
-      val msg = Messages.REQUEST_IS_UNKNOWN()          
-      log.error(msg)
-
-    }
-    
-  }
-
-  private def execute(req:ServiceRequest):Future[ServiceResponse] = {
-	/*
-	 * A request task specifies the genuine task and also 
-	 * an accompanied subtask that describes the information
-	 * element in more detail that is subject of the request
-	 */
-    val task = req.task.split(":")(0)
-    ask(actor(task),req).mapTo[ServiceResponse]
-    
-  }
-  
-  private def actor(worker:String):ActorRef = {
+  protected def actor(worker:String):ActorRef = {
     
     worker match {
        
