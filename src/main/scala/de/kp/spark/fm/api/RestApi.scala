@@ -138,6 +138,17 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	  }
     }  ~ 
     /*
+     * A 'params' request supports the retrieval of the parameters
+     * used for a certain model training task
+     */
+    path("params") {  
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doParams(ctx)
+	    }
+	  }
+    }  ~ 
+    /*
      * A 'status' request supports the retrieval of the status
      * with respect to a certain training task (uid). The latest
      * status or all stati of a certain task are returned.
@@ -161,7 +172,16 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   /**
    * 'predict' requests refer to the retrieval of a predicted target
    * variable for a certain feature vector; the respective vector must
-   * have the same format as the vectors used in the training dataset
+   * have the same format as the vectors used in the training dataset.
+   * 
+   * Request parameters for the 'predict' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - features (String, comma-separated list of Doubles)
+   * 
    */
   private def doPredict[T](ctx:RequestContext) = doRequest(ctx,service,"predict:feature")
   /**
@@ -169,83 +189,187 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * most similar to a set of provided features; note, that these
    * features must be subset of those, that have been used to build
    * the correlation matrix.
+   * 
+   * Request parameters for the 'similar' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - total (String)
+   * - columns (String, comma-separated list of Integers)
+   * 
+   * or 
+   * 
+   * - start (Integer)
+   * - end (Integer)
+   * 
    */
   private def doSimilar[T](ctx:RequestContext) = doRequest(ctx,service,"similar:feature")
 
   /**
-   * 'fields' and 'register' requests refer to the metadata management 
-   * of the Context-Aware Analysis engine; for a certain task (uid) and 
-   * a specific model (name), a specification of the respective data fields 
-   * can be registered and retrieved from a Redis database.
+   * 'fields' and 'register' requests refer to the metadata management; 
+   * for a certain task (uid) and a specific model (name), a specification 
+   * of the respective data fields can be registered and retrieved from a 
+   * Redis database. Request parameters for the 'fields' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
    */
   private def doFields[T](ctx:RequestContext) = doRequest(ctx,service,"fields:feature")
-  
+  /**
+   * Request parameters for the 'register' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - names (String, comma separated list of feature names)
+   * - types (String, comma separated list of feature types)
+   * 
+   */    
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register:feature")
 
   /**
-   * 'index' and 'track' reflect the interface to the tracking functionality
-   * of the Context-Aware Analysis engine.
+   * 'index' and 'track' reflect the interface to the tracking functionality.
+   * 
+   * Request parameters for the 'index' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - source (String)
+   * - type (String)
+   * 
+   * - names (String, comma separated list of feature names)
+   * - types (String, comma separated list of feature types)
+   * 
    */
   private def doIndex[T](ctx:RequestContext) = doRequest(ctx,service,"index:feature")
-
+  /**
+   * Request parameters for the 'track' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - source (String)
+   * - type (String)
+   * 
+   * - lbl. xxx (Double, target value)
+   * - fea. xxx (Double, predictor value) 
+   * 
+   */  
   private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:feature")
+  /**
+   * Request parameters for the 'params' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   */
+  private def doParams[T](ctx:RequestContext) = doRequest(ctx,service,"params")
 
   /**
    * 'status' is an administration request to determine whether a certain model
-   * or matrix building task has been finished or not; the only parameter required 
-   * for status requests is the unique identifier of a certain task
+   * or matrix building task has been finished or not. Request parameters for 
+   * the 'status' request
+   * 
+   * - site (String)
+   * - uid (String)
+   * 
    */
   private def doStatus[T](ctx:RequestContext,subject:String) = {
     
-    subject match {
-      /*
-       * Retrieve the 'latest' status information about a certain
-       * data mining or model building task.
-       */
-      case "latest" => doRequest(ctx,service,"status:latest")
-      /*
-       * Retrieve 'all' stati assigned to a certain data mining
-       * or model building task.
-       */
-      case "all" => doRequest(ctx,service,"status:all")
-      
-      case _ => {/* do nothing */}
-    
-    }
+    val task = "status:" + subject
+    /*
+     * The following topics are supported:
+     * 
+     * Retrieve the 'latest' status information about a certain
+     * data mining or model building task.
+     * 
+     * Retrieve 'all' stati assigned to a certain data mining
+     * or model building task.
+     * 
+     */
+    val topics = List("latest","all")
+    if (topics.contains(subject)) doRequest(ctx,service,task)
   
   }
-
   /**
    * 'train' requests initiate model building; this comprises either a correlation
-   * matrix on top of a factorization model or a factorization model itself
+   * matrix on top of a factorization model or a factorization model itself.
+   *
+   * Request parameters for the 'train' request
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - source (String, ELASTIC, FILE, JDBC, PARQUET)
+   * 
+   * and the following parameters depend on the selected source:
+   * 
+   * ELASTIC:
+   * 
+   * - source.index (String)
+   * - source.type (String)
+   * - query (String)
+   * 
+   * JDBC:
+   * 
+   * - query (String)
+   * 
+   * and the matrix building parameters are
+   * 
+   * - columns (String, comma-separated list of Integers)
+   * 
+   * or 
+   * 
+   * - start (Integer)
+   * - end (Integer)
+   * 
+   * and the model building parameters are
+   * 
+   * - num_attribute (Integer)
+   * - num_factor (Integer)
+   * 
+   * - num_iter (Integer)
+   * - num_partitions (Integer)
+   * 
+   * - learn_rate (Double)
+   * 
+   * - init_mean (Double)
+   * - init_stdev (Double)
+   * 
+   * - k0 (Boolean)
+   * - k1 (Boolean)
+   * 
+   * - reg_c (Double)
+   * - reg_v (Double)
+   * - reg_m (Double)
+   * 
    */
   private def doTrain[T](ctx:RequestContext,subject:String) = {
     
-    subject match {
-      
-      /* ../train/matrix */
-      case "matrix" => {
-        /*
-         * This request trains a correlation matrix on top of a factorization
-         * model; this matrix can be used to compute similarities between
-         * certain specific features
-         */
-        doRequest(ctx,service,"train:matrix")
-      }
-      /* ../train/model */
-      case "model" => {
-        /*
-         * This request trains a factorization model from a feature-based
-         * dataset and saves this model in a pre-configured directory on
-         * the file system
-         */
-        doRequest(ctx,service,"train:model")
-        
-      }
-        
-      case _ => {}
-    }
-    
+    val task = "train:" + subject
+    /*
+     * The following topics are supported:
+     * 
+     * 'matrix': This request trains a correlation matrix on 
+     * top of a factorization model; this matrix can be used 
+     * to compute similarities between certain specific features
+     * 
+     * 'model': This request trains a factorization model from a
+     * feature-based dataset and saves this model in a pre-configured 
+     * directory on the file system
+     */
+    val topics = List("matrix","model")
+    if (topics.contains(subject)) doRequest(ctx,service,task)
     
   }
   

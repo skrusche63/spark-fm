@@ -21,8 +21,10 @@ package de.kp.spark.fm.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
-import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
+import de.kp.spark.core.source._
 
 import de.kp.spark.fm.{Configuration,SparseVector}
 import de.kp.spark.fm.model._
@@ -42,18 +44,11 @@ class FeatureSource(@transient sc:SparkContext) {
   
   def get(req:ServiceRequest):RDD[(Int,(Double,SparseVector))] = {
         
-    val uid = req.data("uid")
+    val uid = req.data(Names.REQ_UID)
     val partitions = req.data("num_partitions").toInt
 
-    val source = req.data("source")
+    val source = req.data(Names.REQ_SOURCE)
     source match {
-
-      case Sources.FILE => {
-       
-        val rawset = new FileSource(sc).connect(config.file(0),req)
-        model.buildFile(req,rawset,partitions)
-        
-      }
 
       case Sources.ELASTIC => {
        
@@ -62,12 +57,28 @@ class FeatureSource(@transient sc:SparkContext) {
        
       }
  
+      case Sources.FILE => {
+       
+        val rawset = new FileSource(sc).connect(config.input(0),req)
+        model.buildFile(req,rawset,partitions)
+        
+      }
+
       case Sources.JDBC => {
 
         val fields = Fields.get(req)
         
         val rawset = new JdbcSource(sc).connect(config,req,fields)
         model.buildJDBC(req,rawset,partitions)
+
+      }
+
+      case Sources.PARQUET => {
+
+        val fields = Fields.get(req)
+        
+        val rawset = new ParquetSource(sc).connect(config.input(0),req,fields)
+        model.buildParquet(req,rawset,partitions)
 
       }
       

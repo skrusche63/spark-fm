@@ -56,7 +56,7 @@ object Configuration extends CoreConf {
     
   }
    
-  override def file:List[String] = {
+  override def input:List[String] = {
   
     val cfg = config.getConfig("file")
     List(cfg.getString("path"))   
@@ -83,6 +83,8 @@ object Configuration extends CoreConf {
    (url,db,user,password)
    
   }
+  
+  override def output:List[String] = null
   
   override def redis:(String,String) = {
   

@@ -33,7 +33,7 @@ object FM extends Serializable {
     val model = new FeatureModel(sc)
     val partitions = params("num_partitions").toInt
     
-    val path = Configuration.file(0)
+    val path = Configuration.input(0)
     
     val rawset = new FileSource(sc).connect(path,null)
     val dataset = model.buildFile(null,rawset,partitions)

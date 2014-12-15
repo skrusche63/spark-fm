@@ -38,6 +38,8 @@ class FMMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
       case "index"    => context.actorOf(Props(new BaseIndexer(Configuration)))        
       case "track"    => context.actorOf(Props(new BaseTracker(Configuration)))
 
+      case "params"   => context.actorOf(Props(new ParamQuestor(Configuration)))
+
       case "status"   => context.actorOf(Props(new StatusQuestor(Configuration)))
       case "train"    => context.actorOf(Props(new FMBuilder(sc)))
 

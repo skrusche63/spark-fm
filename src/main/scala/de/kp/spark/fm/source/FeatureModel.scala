@@ -123,6 +123,38 @@ class FeatureModel(@transient sc:SparkContext) extends Serializable {
     randomizedDS.partitionBy(partitioner)
     
   }
+  
+  def buildParquet(req:ServiceRequest,rawset:RDD[Map[String,Any]],partitions:Int):RDD[(Int,(Double,SparseVector))] = {
+
+    val spec = sc.broadcast(Fields.get(req))
+    val num_partitions = sc.broadcast(partitions)
+    
+    val randomizedDS = rawset.map(data => {
+      
+      val fields = spec.value
+      val ix = new java.util.Random().nextInt(num_partitions.value)
+
+      val target = data(fields.head).asInstanceOf[Double]
+      val features = ArrayBuffer.empty[Double]
+      
+      for (field <- fields.tail) {
+        features += data(field).asInstanceOf[Double]
+      }
+ 
+      (ix, (target,buildSparseVector(features.toArray)))
+      
+    })
+    
+    val partitioner = new Partitioner() {
+      
+      def numPartitions = num_partitions.value
+      def getPartition(key: Any) = key.asInstanceOf[Int]
+      
+    }
+    
+    randomizedDS.partitionBy(partitioner)
+    
+  }
 
   /**
    * This is a helper method to build a sparse vector from the input data;
