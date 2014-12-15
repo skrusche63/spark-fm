@@ -29,7 +29,7 @@ import de.kp.spark.core.model._
 import de.kp.spark.fm.{Configuration,SparseVector}
 import de.kp.spark.fm.spec.{Fields}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer,WrappedArray}
 
 class FeatureModel(@transient sc:SparkContext) extends Serializable {
   
@@ -133,15 +133,41 @@ class FeatureModel(@transient sc:SparkContext) extends Serializable {
       
       val fields = spec.value
       val ix = new java.util.Random().nextInt(num_partitions.value)
-
-      val target = data(fields.head).asInstanceOf[Double]
-      val features = ArrayBuffer.empty[Double]
-      
-      for (field <- fields.tail) {
-        features += data(field).asInstanceOf[Double]
-      }
+      /*
+       * The parquet file can be described in two different ways:
+       * 
+       * (a) the feature part is specified as an array of values
+       * 
+       * (b) the feature part is specified by individual fields;
+       * in this case the field value must be Doubles
+       * 
+       */
+      if (data.size == 2) {
+        /*
+         * 'data' specifies a map of two entries, where the first represents the 
+         * target variable and the second one the predictor or feature variables
+         * as an array; this parquet file format is used, if it specifies by a 
+         * targeted point
+         */
+        val seq = data.toSeq
+        
+        val target = seq(0)._2.asInstanceOf[Double]
+        val features = seq(1)._2.asInstanceOf[WrappedArray[Double]]
  
-      (ix, (target,buildSparseVector(features.toArray)))
+        (ix, (target,buildSparseVector(features.toArray)))
+        
+      } else {
+      
+        val target = data(fields.head).asInstanceOf[Double]
+        val features = ArrayBuffer.empty[Double]
+      
+        for (field <- fields.tail) {
+          features += data(field).asInstanceOf[Double]
+        }
+ 
+        (ix, (target,buildSparseVector(features.toArray)))
+      
+      }
       
     })
     
