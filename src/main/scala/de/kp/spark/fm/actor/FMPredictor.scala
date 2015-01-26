@@ -44,7 +44,7 @@ class FMPredictor(@transient sc:SparkContext) extends BaseActor {
       val Array(task,topic) = req.task.split(":")
       val response = topic match {
         
-        case "feature" => {
+        case "vector" => {
           /*
            * This request provides a feature vector and computes the target 
            * (or decision) variable; this refers to a general purpose rating

@@ -183,7 +183,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - features (String, comma-separated list of Doubles)
    * 
    */
-  private def doPredict[T](ctx:RequestContext) = doRequest(ctx,service,"predict:feature")
+  private def doPredict[T](ctx:RequestContext) = doRequest(ctx,service,"predict:vector")
   /**
    * 'similar' requests refer to the retrieval of features that are
    * most similar to a set of provided features; note, that these
@@ -205,7 +205,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - end (Integer)
    * 
    */
-  private def doSimilar[T](ctx:RequestContext) = doRequest(ctx,service,"similar:feature")
+  private def doSimilar[T](ctx:RequestContext) = doRequest(ctx,service,"similar:vector")
 
   /**
    * 'fields' and 'register' requests refer to the metadata management; 
@@ -218,7 +218,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - name (String)
    * 
    */
-  private def doFields[T](ctx:RequestContext) = doRequest(ctx,service,"fields:feature")
+  private def doFields[T](ctx:RequestContext) = doRequest(ctx,service,"fields:vector")
   /**
    * Request parameters for the 'register' request:
    * 
@@ -226,11 +226,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - uid (String)
    * - name (String)
    * 
-   * - names (String, comma separated list of feature names)
-   * - types (String, comma separated list of feature types)
+   * - row (Long)
+   * - col (Long)
+   * - lbl (Double)
+   * - val (Double)
    * 
    */    
-  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register:feature")
+  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register:vector")
 
   /**
    * 'index' and 'track' reflect the interface to the tracking functionality.
@@ -241,14 +243,11 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - uid (String)
    * - name (String)
    * 
-   * - source (String)
+   * - index (String)
    * - type (String)
    * 
-   * - names (String, comma separated list of feature names)
-   * - types (String, comma separated list of feature types)
-   * 
    */
-  private def doIndex[T](ctx:RequestContext) = doRequest(ctx,service,"index:feature")
+  private def doIndex[T](ctx:RequestContext) = doRequest(ctx,service,"index:vector")
   /**
    * Request parameters for the 'track' request:
    * 
@@ -259,11 +258,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - source (String)
    * - type (String)
    * 
-   * - lbl. xxx (Double, target value)
-   * - fea. xxx (Double, predictor value) 
+   * - row (Long)
+   * - col (Long)
+   * - lbl (String)
+   * - val (Double)
    * 
    */  
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:feature")
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:vector")
   /**
    * Request parameters for the 'params' request:
    * 

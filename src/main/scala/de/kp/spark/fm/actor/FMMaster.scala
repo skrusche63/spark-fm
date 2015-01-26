@@ -33,7 +33,7 @@ class FMMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
     worker match {
        
       case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))        
-      case "register" => context.actorOf(Props(new FMRegistrar()))
+      case "register" => context.actorOf(Props(new BaseRegistrar(Configuration)))
       
       case "index"    => context.actorOf(Props(new BaseIndexer(Configuration)))        
       case "track"    => context.actorOf(Props(new BaseTracker(Configuration)))

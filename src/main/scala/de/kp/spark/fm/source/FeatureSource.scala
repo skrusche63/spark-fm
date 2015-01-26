@@ -65,8 +65,8 @@ class FeatureSource(@transient sc:SparkContext) {
       }
 
       case Sources.JDBC => {
-
-        val fields = Fields.get(req)
+    
+        val fields = Fields.get(req).map(kv => kv._2).toList  
         
         val rawset = new JdbcSource(sc).connect(config,req,fields)
         model.buildJDBC(req,rawset,partitions)
@@ -74,10 +74,8 @@ class FeatureSource(@transient sc:SparkContext) {
       }
 
       case Sources.PARQUET => {
-
-        val fields = Fields.get(req)
         
-        val rawset = new ParquetSource(sc).connect(config.input(0),req,fields)
+        val rawset = new ParquetSource(sc).connect(config.input(0),req)
         model.buildParquet(req,rawset,partitions)
 
       }

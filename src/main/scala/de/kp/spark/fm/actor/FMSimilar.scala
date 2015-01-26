@@ -47,7 +47,7 @@ class FMSimilar(@transient sc:SparkContext) extends BaseActor {
       val Array(task,topic) = req.task.split(":")
       val response = topic match {
        
-        case "feature" => {
+        case "vector" => {
           /*
            * This request provides a certain feature index, e.g. for a user
            * or an item and returns the top most similar features
