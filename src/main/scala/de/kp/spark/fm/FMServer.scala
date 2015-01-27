@@ -22,24 +22,13 @@ import akka.actor.{ActorSystem,Props}
 import com.typesafe.config.ConfigFactory
 
 import de.kp.spark.core.SparkService
-import de.kp.spark.fm.api.{AkkaApi,RestApi}
+import de.kp.spark.fm.api.AkkaApi
 
 object FMService extends SparkService{
   
   private val sc = createCtxLocal("FMContext",Configuration.spark)      
 
   def main(args: Array[String]) {
-    
-    /**
-     * REST API 
-     */
-    val httpSystem = ActorSystem("rest-server")
-    sys.addShutdownHook(httpSystem.shutdown)
-    
-    val (host,port) = Configuration.rest
-    new RestApi(host,port,httpSystem,sc).start()
- 
-    println("REST API activated.")
     
     /**
      * AKKA API 
