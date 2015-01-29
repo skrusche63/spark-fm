@@ -60,7 +60,7 @@ class FMPredictor(@transient ctx:RequestContext) extends BaseActor {
               
               try {
 
-                val (c,v,m,p,blocks) = FMUtil.read(path)
+                val (c,v,m,p,blocks) = FMUtil.readModel(path)
                 val fm = new FM(ctx)
                   
                 val features = req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)

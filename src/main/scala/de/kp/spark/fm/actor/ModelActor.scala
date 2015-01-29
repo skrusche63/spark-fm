@@ -93,7 +93,7 @@ class ModelActor(@transient ctx:RequestContext) extends BaseActor {
     
     /* Save polynom in directory of file system */
     val p = req.data
-    FMUtil.write(store, c, v, m, p, blocks)
+    FMUtil.writeModel(store, c, v, m, p, blocks)
     
     /* Put path to polynom to Redis sink */
     sink.addModel(req,store)

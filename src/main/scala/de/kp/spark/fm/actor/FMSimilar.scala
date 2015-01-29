@@ -19,7 +19,6 @@ package de.kp.spark.fm.actor
 */
 
 import de.kp.spark.core.Names
-import de.kp.spark.core.math.SMatrix
 
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
@@ -59,34 +58,29 @@ class FMSimilar(@transient ctx:RequestContext) extends BaseActor {
               failure(req,Messages.MATRIX_DOES_NOT_EXIST(uid))
               
             } else {
+              
+              val matrix = FMUtil.readMatrix(path)   
                 
               val handler = new FeatureHandler(req)
-              val similarity = loadMatrix(path)   
-                
               val columns = handler.columns.sorted
-              /*
-               * We have built the similarity matrix from the interaction 
-               * part (m) of the factorization or polynom model, i.e. we 
-               * compare features by their interaction with all other features.
-               * 
-               * To determine the respective SMatrix we use offsets for the 
-               * matrix positions
-               */
-              val offset = columns(0)
-              val indexes = columns.map(x => x - offset)     
                 
               /*
                * For all fields provided compute the top 'k' similar fields
                */
               val total = req.data(Names.REQ_TOTAL).toInt
-              val scores = indexes.map(index => (index,similarity.getHighest(index,total)))
-              val similars = scores.map(x => {
-
-                val scoredColumns = x._2.map(v => ScoredColumn(v._1 + offset,v._2))
-                SimilarColumns(x._1 + offset,scoredColumns)
-                  
-              })
+              val similars = columns.map(field => {
                 
+                val row = matrix.getRow(field)
+                /*
+                 * Determine highest similarity scores
+                 */
+                val scores = matrix.getRow(field).sorted.reverse.take(total)
+                val others = scores.map(score => ScoredColumn(row.indexOf(score),score)).toList
+              
+                SimilarColumns(field,others)
+              
+              })
+              
               val result = Serializer.serializeSimilars(Similars(similars))
               val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> result)
                   
@@ -155,24 +149,7 @@ class FMSimilar(@transient ctx:RequestContext) extends BaseActor {
     } else {
       throw new Exception("Provided parameters do not permit any data processing.")
     }
-   
     
-  }
-  
-  private def loadMatrix(path:String):SMatrix = {
-    
-    val file = ctx.sc.textFile(path).coalesce(1,false)
-    val dim = file.count().toInt
-
-    def seqOp(matrix:SMatrix, data:String):SMatrix = {      
-      matrix.deserializeRow(data)
-      matrix
-    }
-    /* Note that matrix1 is always NULL */
-    def combOp(matrix1:SMatrix,matrix2:SMatrix):SMatrix = matrix2      
-
-    file.aggregate(new SMatrix(dim,1))(seqOp,combOp)    
-
   }
   
 }

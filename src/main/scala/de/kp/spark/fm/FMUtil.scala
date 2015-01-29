@@ -53,7 +53,21 @@ private class FMStruct (
 
 object FMUtil {
   
-  def read(store:String):(Double,DenseVector,DenseMatrix,Map[String,Any],Seq[FMBlock]) = {
+  def readMatrix(store:String):DenseMatrix = {
+
+    val conf = new HadoopConf()
+	val fs = FileSystem.get(conf)
+    
+    val ois = new ObjectInputStream(fs.open(new Path(store)))
+    val matrix = ois.readObject().asInstanceOf[DenseMatrix]
+      
+    ois.close()
+    
+    matrix
+    
+  }
+  
+  def readModel(store:String):(Double,DenseVector,DenseMatrix,Map[String,Any],Seq[FMBlock]) = {
     
     val conf = new HadoopConf()
 	val fs = FileSystem.get(conf)
@@ -94,7 +108,19 @@ object FMUtil {
     
   }
 
-  def write(store:String,c:Double,v:DenseVector,m:DenseMatrix,p:Map[String,String],blocks:Seq[FMBlock]) {
+  def writeMatrix(store:String, matrix:DenseMatrix) {
+    
+    val conf = new HadoopConf()
+	val fs = FileSystem.get(conf)
+
+    val oos = new ObjectOutputStream(fs.create(new Path(store)))   
+    oos.writeObject(matrix)
+    
+    oos.close
+    
+  }
+  
+  def writeModel(store:String, c:Double, v:DenseVector, m:DenseMatrix, p:Map[String,String], blocks:Seq[FMBlock]) {
 
     val metadata = blocks.map(block => (block.category,block.begin,block.end))
     

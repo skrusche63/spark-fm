@@ -18,8 +18,10 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.distributed.{MatrixEntry, RowMatrix}
+
 import de.kp.spark.core.Names
-import de.kp.spark.core.math.{CosineSimilarity,SMatrix}
 
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
@@ -97,7 +99,7 @@ class MatrixActor(@transient ctx:RequestContext) extends BaseActor {
     cache.addStatus(req,FMStatus.MATRIX_TRAINING_STARTED)
    
     /* Retrieve model & parameters from HDFS */
-    val (c,v,m,p,blocks) = FMUtil.read(path)
+    val (c,v,m,p,blocks) = FMUtil.readModel(path)
             
     /* 
      * Build correlation matrix: Retrieve all field names that
@@ -129,13 +131,12 @@ class MatrixActor(@transient ctx:RequestContext) extends BaseActor {
      * by matrix name and current timestamp
      */
     val now = new java.util.Date()
-    val dir = String.format("""%s/matrix/%s/%s""",base,name,now.getTime().toString)
+    val store = String.format("""%s/matrix/%s/%s""",base,name,now.getTime().toString)
     
-    val output = matrix.serialize()
-    ctx.sc.parallelize(output,1).saveAsTextFile(dir)
+    FMUtil.writeMatrix(store,matrix)
     
     /* Put offset and path of matrix to Redis sink */
-    sink.addMatrix(req,dir)
+    sink.addMatrix(req,store)
          
     /* Update cache */
     cache.addStatus(req,FMStatus.MATRIX_TRAINING_FINISHED)
@@ -144,27 +145,27 @@ class MatrixActor(@transient ctx:RequestContext) extends BaseActor {
     notify(req,FMStatus.MATRIX_TRAINING_FINISHED)
     
   }
-  
-  private def buildMatrix(indexes:List[Int],interaction:DenseMatrix):SMatrix = {
-    /* 
-     * The diagonal value (fixed for an SMatrix) is set to '1'
-     * as we use cosine similarity measue
-     */
-    val dim = indexes.length
-    val matrix = new SMatrix(dim,1)
+  /**
+   * The interaction matrix is a (factor x features) matrix, where each row
+   * specifies a certain latent factor and a column determines the engagement
+   * with these latent factors; we there need to compute the column similarity 
+   */
+  private def buildMatrix(indexes:List[Int],interaction:DenseMatrix):DenseMatrix = {
 
-    (0 until dim).foreach(i => {
-      ((i+1) until dim).foreach(j => {
-        
-        val row_i = interaction.getRow(i)
-        val row_j = interaction.getRow(j)
-      
-        val sim = CosineSimilarity.compute(row_i,row_j)
-        matrix.set(i,j,sim)
-        
-      })
-      
-    })
+    val rows = (0 until interaction.rdim).map(i => Vectors.dense(interaction.getRow(i)))
+    val mat = new RowMatrix(ctx.sc.parallelize(rows))
+    /*
+     * Calculate column similarity
+     */
+    val sim = mat.columnSimilarities()
+    
+    val rdim = sim.numRows.toInt
+    val cdim = sim.numCols.toInt
+    
+    require (rdim == cdim)
+    
+    val matrix = new DenseMatrix(rdim,cdim)
+    sim.entries.collect().foreach{case MatrixEntry(i,j,u) => matrix.update(i.toInt,j.toInt,u)}    
 
     matrix
     
