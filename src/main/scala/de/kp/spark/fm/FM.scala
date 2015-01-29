@@ -18,102 +18,89 @@ package de.kp.spark.fm
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.{RangePartitioner,SparkContext}
+import org.apache.spark.{RangePartitioner}
 import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.model._
 import de.kp.spark.core.source.FileSource
-import de.kp.spark.fm.source.{FeatureModel}
 
-object FM extends Serializable {
+import de.kp.spark.fm._
+import de.kp.spark.fm.source.TargetedPointModel
 
-  def trainFromFile(@transient sc:SparkContext,params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
+class FM(@transient ctx:RequestContext) extends Serializable {
+
+  def trainFromFile(params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
     
-    val model = new FeatureModel(sc)
-    val partitions = params("num_partitions").toInt
+    val model = new TargetedPointModel(ctx)
     
     val path = Configuration.input(0)
+    val rawset = new FileSource(ctx.sc).connect(path,null)
+
+    val (blocks,points) = model.buildFile(null,rawset)
     
-    val rawset = new FileSource(sc).connect(path,null)
-    val dataset = model.buildFile(null,rawset,partitions)
-    
-    trainFromRDD(dataset,params)
+    trainFromRDD(points,params)
     
   }
   
-  def trainFromRDD(dataset:RDD[(Int,(Double,SparseVector))],params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
-    
-    val num_partitions = params("num_partitions").toInt
+  def trainFromRDD(points:RDD[(Double,FMVector)],params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
+
+    val data = points.collect()
+    val algo = new PolySGD(params)
+
+    val num_iter = params("num_iter").toInt
+      
+    var (c,v,m) = getPolynom(params)
+    for (iter <- 0 until num_iter) {
+      
+      for ((target,features) <- data) {
+        /*
+         * Calculate gradient for polynom
+         */
+        val (g_c,g_v,g_m) = algo.gradient(target,features,c, v, m)
+        /*
+         * Update polynom
+         */
+        c = c + g_c
+        v = v + g_v
+        m = m + g_m
         
-    /**
-     * STEP #1
-     * 
-     * Calculate model per partition
-     */
-    val polynom = dataset.groupByKey().map(valu => {
-      
-      val algo = new PolySGD(params)
-      val num_iter = params("num_iter").toInt
-      
-      var (c,v,m) = getPolynom(params)
-      
-      val (partition,data) = valu      
-      for (iter <- 0 until 20) {
-        for ((target,features) <- data) {
-          /**
-           * Calculate gradient for polynom
-           */
-          val (g_c,g_v,g_m) = algo.gradient(target,features,c, v, m)
-          /**
-           * Update polynom
-           */
-          c = c + g_c
-          v = v + g_v
-          m = m + g_m
-        
-        }      
       }
       
-      (partition,c,v,m)
+      (c,v,m)
       
-    })
-    
-    /**
-     * STEP #2
-     * 
-     * Build mean values
-     */    
-    val raw = polynom.collect()
-    
-    val scale = (1.0 / num_partitions)
-    
-    val mean_c = raw.map(valu => valu._2).reduceLeft(_ + _) * scale
-    val mean_v = raw.map(valu => valu._3).reduceLeft(_ + _) * scale
-    val mean_m = raw.map(valu => valu._4).reduceLeft(_ + _) * scale
-    
-    (mean_c, mean_v, mean_m)
+    }
+
+    (c,v,m)
     
   }
   
-  def calculateRSME(sc:SparkContext,args:Map[String,String],c:Double,v:DenseVector,m:DenseMatrix):Double = {
+  def calculateRSME(params:Map[String,String],c:Double,v:DenseVector,m:DenseMatrix):Double = {
     
-    val dataset = args("dataset")
+    val dataset = params("dataset")
     
-    val k0 = args("k0").toBoolean
-    val k1 = args("k1").toBoolean
+    val args = ctx.sc.broadcast(params)
+    val model = ctx.sc.broadcast((c,v,m))
 
-    val num_factor = args("num_factor").toInt
-    val file = sc.textFile(dataset)
+    val file = ctx.sc.textFile(dataset)
     
     val rsme = file.map(valu => {
 
       val parts = valu.split(',')
       
       val target = parts(0).toDouble
-      val features = extractFeatures(parts(1).trim().split(' ').map(_.toDouble))
+      val vector = extractFeatures(parts(1).trim().split(' ').map(_.toDouble))
+    
+      val bargs  = args.value
+      val bmodel = model.value 
+      
+      val k0 = bargs("k0").toBoolean
+      val k1 = bargs("k1").toBoolean
 
-	  val y_p = predict(features,c,v,m,num_factor,k0,k1)
+      val num_factor = bargs("num_factor").toInt
+
+	  val y_p = predict(vector,bmodel._1,bmodel._2,bmodel._3,num_factor,k0,k1)
 
 	  val err: Double = y_p - target
 	  err*err
@@ -124,6 +111,42 @@ object FM extends Serializable {
 
   }
   
+  def calculateRSME(req:ServiceRequest,c:Double,v:DenseVector,m:DenseMatrix,points:RDD[(Double,FMVector)]):Double = {
+    
+    val args = ctx.sc.broadcast(req.data)
+    val model = ctx.sc.broadcast((c,v,m))
+    
+    val rsme = points.map{case (target,vector) => {
+    
+      val bargs  = args.value
+      val bmodel = model.value 
+      
+      val k0 = bargs("k0").toBoolean
+      val k1 = bargs("k1").toBoolean
+
+      val num_factor = bargs("num_factor").toInt
+
+	  val y_p = predict(vector,bmodel._1,bmodel._2,bmodel._3,num_factor,k0,k1)
+
+	  val err: Double = y_p - target
+	  err*err
+      
+    }}
+
+    Math.sqrt(rsme.collect().sum / points.count())
+
+  }
+  
+  def predict(data:Array[Double],c:Double,v:DenseVector,m:DenseMatrix,p:Map[String,Any]): Double = {
+    
+    val k0 = p("k0").asInstanceOf[Boolean]
+    val k1 = p("k1").asInstanceOf[Boolean]
+     
+    val num_factor = p("num_factor").asInstanceOf[Int]
+    predict(data,c,v,m,num_factor,k0,k1)
+   
+  }
+  
   def predict(data:Array[Double],c:Double,v:DenseVector,m:DenseMatrix,num_factor:Int,k0:Boolean,k1:Boolean): Double = {
   
     val features = extractFeatures(data)
@@ -131,7 +154,7 @@ object FM extends Serializable {
   
   }
 
-  private def predict(features:SparseVector,c:Double,v:DenseVector,m:DenseMatrix,num_factor:Int,k0:Boolean,k1:Boolean): Double = {
+  private def predict(features:FMVector,c:Double,v:DenseVector,m:DenseMatrix,num_factor:Int,k0:Boolean,k1:Boolean): Double = {
 
     val sum = Array.fill(num_factor)(0.0)
 
@@ -209,9 +232,9 @@ object FM extends Serializable {
    * This is a helper method to build a sparse vector from the input data;
    * to this end, we reduce to such entries that are different from zero
    */
-  private def extractFeatures(raw:Array[Double]):SparseVector = {
+  private def extractFeatures(raw:Array[Double]):FMVector = {
     
-    val vector = new SparseVector(raw.length)
+    val vector = new FMVector(raw.length)
     
     for (i <- 0 until raw.length) {
     	

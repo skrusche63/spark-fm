@@ -18,18 +18,15 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
-
 import de.kp.spark.core.Names
 
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
 
-import de.kp.spark.fm.FMModel
+import de.kp.spark.fm._
 import de.kp.spark.fm.model._
 
-class FMPredictor(@transient sc:SparkContext) extends BaseActor {
+class FMPredictor(@transient ctx:RequestContext) extends BaseActor {
 
   implicit val ec = context.dispatcher
   val sink = new RedisDB(host,port.toInt)
@@ -41,67 +38,51 @@ class FMPredictor(@transient sc:SparkContext) extends BaseActor {
       val origin = sender    
       val uid = req.data(Names.REQ_UID)
       
-      val Array(task,topic) = req.task.split(":")
-      val response = topic match {
-        
-        case "vector" => {
-          /*
-           * This request provides a feature vector and computes the target 
-           * (or decision) variable; this refers to a general purpose rating
-           * prediction
+      val response =         
+        if (sink.modelExists(req) == false) {           
+          failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
+            
+        } else {    
+            
+          /* 
+           * Retrieve path to polynom: a model is uniquely determined
+           * by the model name and the respective task identifier (uid);
+           * this approach enables to train different models for the 
+           * same uid
            */
-          if (sink.modelExists(req) == false) {           
+          val path = sink.model(req)
+          if (path == null) {
             failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
-            
-          } else {    
-            
-            /* 
-             * Retrieve path to polynom: a model is uniquely determined
-             * by the model name and the respective task identifier (uid);
-             * this approach enables to train different models for the 
-             * same uid
-             */
-            val path = sink.model(req)
-            if (path == null) {
-              failure(req,Messages.MODEL_DOES_NOT_EXIST(uid))
               
-            } else {
+          } else {
               
-              if (req.data.contains(Names.REQ_FEATURES)) {
+            if (req.data.contains(Names.REQ_FEATURES)) {
               
-                try {
-                
-                  val model = new FMModel()
-                  model.load(path)
+              try {
+
+                val (c,v,m,p,blocks) = FMUtil.read(path)
+                val fm = new FM(ctx)
                   
-                  val prediction = model.predict(req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)).toString
+                val features = req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)
+                val prediction = fm.predict(features, c, v, m, p).toString
 
-                  val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> prediction)
-                  new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
+                val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> prediction)
+                new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)
                 
-                } catch {
-                  case e:Exception => {
-                    failure(req,e.toString())                   
-                  }
+              } catch {
+                case e:Exception => {
+                  failure(req,e.toString())                   
                 }
-                
-              } else {
-                failure(req,Messages.MISSING_FEATURES(uid))
-                
               }
+                
+            } else {
+              failure(req,Messages.MISSING_FEATURES(uid))
+                
             }
-          }
-         
-        }
-
-        case _ => {
-          
-          val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)          
-          failure(req,msg)
-           
-        }
         
-      }
+          }
+      
+        }
           
       origin ! response
       context.stop(self)

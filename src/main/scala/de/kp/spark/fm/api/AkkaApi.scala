@@ -18,14 +18,14 @@ package de.kp.spark.fm.api
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import akka.actor.{ActorSystem,Props}
 
+import de.kp.spark.fm.RequestContext
 import de.kp.spark.fm.actor.FMMaster
 
-class AkkaApi(system:ActorSystem,@transient val sc:SparkContext) {
+class AkkaApi(system:ActorSystem,@transient val ctx:RequestContext) {
 
-  val master = system.actorOf(Props(new FMMaster(sc)), name="context-master")
+  val master = system.actorOf(Props(new FMMaster(ctx)), name="context-master")
 
   def start() {
      while (true) {}   

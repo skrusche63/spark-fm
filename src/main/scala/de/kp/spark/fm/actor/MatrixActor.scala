@@ -18,15 +18,13 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
-
 import de.kp.spark.core.Names
 import de.kp.spark.core.math.{CosineSimilarity,SMatrix}
 
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
 
-import de.kp.spark.fm.{Configuration,DenseMatrix,FeatureHandler,FMModel}
+import de.kp.spark.fm._
 import de.kp.spark.fm.model._
 
 /**
@@ -34,7 +32,7 @@ import de.kp.spark.fm.model._
  * similarity matrix that is built from the feature interaction
  * computed by the factorization or polynom model
  */
-class MatrixActor(@transient sc:SparkContext) extends BaseActor {
+class MatrixActor(@transient ctx:RequestContext) extends BaseActor {
   
   val sink = new RedisDB(host,port.toInt)
   private val base = Configuration.model
@@ -97,12 +95,9 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
     }
 
     cache.addStatus(req,FMStatus.MATRIX_TRAINING_STARTED)
-
-    val model = new FMModel()
-    model.load(path)
-    
-    /* Retrieve factors from model */
-    val (c,v,m,p) = model.factors
+   
+    /* Retrieve model & parameters from HDFS */
+    val (c,v,m,p,blocks) = FMUtil.read(path)
             
     /* 
      * Build correlation matrix: Retrieve all field names that
@@ -137,7 +132,7 @@ class MatrixActor(@transient sc:SparkContext) extends BaseActor {
     val dir = String.format("""%s/matrix/%s/%s""",base,name,now.getTime().toString)
     
     val output = matrix.serialize()
-    sc.parallelize(output,1).saveAsTextFile(dir)
+    ctx.sc.parallelize(output,1).saveAsTextFile(dir)
     
     /* Put offset and path of matrix to Redis sink */
     sink.addMatrix(req,dir)

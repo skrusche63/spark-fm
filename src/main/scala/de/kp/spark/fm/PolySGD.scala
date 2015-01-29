@@ -33,7 +33,7 @@ class PolySGD(args:Map[String,String]) extends Serializable {
   val learn_rate = args("learn_rate").toDouble
   val num_factor = args("num_factor").toInt
 
-  def gradient(target:Double,features:SparseVector,c:Double,v:DenseVector,m:DenseMatrix):(Double,DenseVector,DenseMatrix) = {
+  def gradient(target:Double,features:FMVector,c:Double,v:DenseVector,m:DenseMatrix):(Double,DenseVector,DenseMatrix) = {
 	  	  
 	val card: Int = features.size  	   
 	val sum = Array.fill(num_factor)(0.0)
@@ -100,7 +100,7 @@ class PolySGD(args:Map[String,String]) extends Serializable {
 	
   }
 
-  private def predict(features:SparseVector,sum:Array[Double],c:Double,v:DenseVector,m:DenseMatrix): Double = {
+  private def predict(features:FMVector,sum:Array[Double],c:Double,v:DenseVector,m:DenseMatrix): Double = {
 		
 	val card: Int = features.size
 				
@@ -114,9 +114,7 @@ class PolySGD(args:Map[String,String]) extends Serializable {
      * Add linear part of the FM equation
      */
 	if (k1) {
-	  for (i <- 0 until card) {
-		result += v(i) * features(i)
-	  }			
+	  result += (0 until card).map(i => v(i) * features(i)).sum		
 	}
 	/* 
 	 * Add quadratic part of the FM equation; 
@@ -124,7 +122,7 @@ class PolySGD(args:Map[String,String]) extends Serializable {
 	 * parameters
 	 */
 	val sum_sqr = Array.fill(num_factor)(0.0)
-	for (f <- 0 until num_factor) {
+	result += (0 until num_factor).map(f => {
 
 	  // initialize computation parameters; for more detail, see S. Rendle, Equation (5)
 	  // http://www.csie.ntu.edu.tw/~b97053/paper/Factorization%20Machines%20with%20libFM.pdf
@@ -137,9 +135,9 @@ class PolySGD(args:Map[String,String]) extends Serializable {
 				
 	  }
 			
-	  result += 0.5 * (sum(f)*sum(f) - sum_sqr(f))
+	  0.5 * (sum(f)*sum(f) - sum_sqr(f))
 	
-	}
+	}).sum
 
 	result
 	

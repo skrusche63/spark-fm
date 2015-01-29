@@ -54,20 +54,22 @@ object ExampleApp {
     )
     
     val sc = createLocalCtx("ExampleApp")
-
+    val ctx = new RequestContext(sc)
+    
+    val fm = new FM(ctx)
     /**
      * Train polynom (model)
      */
-    val (c,v,m) = FM.trainFromFile(sc,args)
+    val (c,v,m) = fm.trainFromFile(args)
 
     /**
      * Determine error
      */
-    val rsme = FM.calculateRSME(sc,args,c,v,m)
+    val rsme = fm.calculateRSME(args,c,v,m)
     println("RMSE: " + rsme)
     
     val data = Array(1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0)
-    val target = FM.predict(data,c,v,m,10,true,true)
+    val target = fm.predict(data,c,v,m,10,true,true)
     
     println("Target: " + target)
 

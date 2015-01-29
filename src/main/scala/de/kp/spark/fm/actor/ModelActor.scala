@@ -18,9 +18,6 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
-
 import java.util.Date
 
 import de.kp.spark.core.Names
@@ -28,14 +25,14 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
 
-import de.kp.spark.fm.{Configuration,FM,FMModel,SparseVector}
+import de.kp.spark.fm._
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.source.FeatureSource
+import de.kp.spark.fm.source.TargetedPointSource
 
-class ModelActor(@transient sc:SparkContext) extends BaseActor {
+class ModelActor(@transient ctx:RequestContext) extends BaseActor {
   
-  private val base = Configuration.model
+  private val base = ctx.config.model
   val sink = new RedisDB(host,port.toInt)
   
   def receive = {
@@ -82,23 +79,24 @@ class ModelActor(@transient sc:SparkContext) extends BaseActor {
     /* Register status */
     cache.addStatus(req,FMStatus.MODEL_TRAINING_STARTED)
                    
-    val dataset = new FeatureSource(sc).get(req)
-    if (dataset == null) throw new Exception("Data source is empty.")
+    val (blocks,points) = new TargetedPointSource(ctx).get(req)
 
+    val fm = new FM(ctx)
     /* Train polynom (model) */
-    val (c,v,m) = FM.trainFromRDD(dataset,req.data)
+    val (c,v,m) = fm.trainFromRDD(points,req.data)
 
     /* Determine error */
-    val rsme = FM.calculateRSME(sc,req.data,c,v,m)
-
+    val rsme = fm.calculateRSME(req,c,v,m,points)
+    
     val now = new Date()
-    val dir = String.format("""%s/model/%s/%s""",base,name,now.getTime().toString)
+    val store = String.format("""%s/model/%s/%s""",base,name,now.getTime().toString)
     
     /* Save polynom in directory of file system */
-    new FMModel(c,v,m,req.data).save(dir)
+    val p = req.data
+    FMUtil.write(store, c, v, m, p, blocks)
     
     /* Put path to polynom to Redis sink */
-    sink.addModel(req,dir)
+    sink.addModel(req,store)
          
     /* Update cache */
     cache.addStatus(req,FMStatus.MODEL_TRAINING_FINISHED)

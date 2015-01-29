@@ -18,8 +18,6 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
-
 import akka.actor.{ActorRef,Props}
 
 import akka.pattern.ask
@@ -30,13 +28,13 @@ import de.kp.spark.core.model._
 
 import de.kp.spark.core.actor.BaseTrainer
 
-import de.kp.spark.fm.Configuration
+import de.kp.spark.fm._
 import de.kp.spark.fm.model._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-class FMBuilder(@transient val sc:SparkContext) extends BaseTrainer(Configuration) {
+class FMBuilder(@transient val ctx:RequestContext) extends BaseTrainer(ctx.config) {
   
   override def train(req:ServiceRequest):Future[Any] = {
 
@@ -110,8 +108,8 @@ class FMBuilder(@transient val sc:SparkContext) extends BaseTrainer(Configuratio
     val Array(task,topic) = req.task.split(":")
     topic match {
       
-      case "matrix" => context.actorOf(Props(new MatrixActor(sc)))
-      case "model"  => context.actorOf(Props(new ModelActor(sc)))
+      case "matrix" => context.actorOf(Props(new MatrixActor(ctx)))
+      case "model"  => context.actorOf(Props(new ModelActor(ctx)))
       
       case _ => null
       

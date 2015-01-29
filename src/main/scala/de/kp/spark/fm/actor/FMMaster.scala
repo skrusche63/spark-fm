@@ -18,33 +18,32 @@ package de.kp.spark.fm.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import akka.actor.{ActorRef,Props}
 
 import de.kp.spark.core.actor._
 import de.kp.spark.core.model._
 
-import de.kp.spark.fm.Configuration
+import de.kp.spark.fm._
 
-class FMMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
+class FMMaster(@transient ctx:RequestContext) extends BaseMaster(ctx.config) {
   
   protected def actor(worker:String):ActorRef = {
     
     worker match {
        
-      case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))        
-      case "register" => context.actorOf(Props(new BaseRegistrar(Configuration)))
+      case "fields"   => context.actorOf(Props(new FieldQuestor(ctx.config)))        
+      case "register" => context.actorOf(Props(new BaseRegistrar(ctx.config)))
       
-      case "index"    => context.actorOf(Props(new BaseIndexer(Configuration)))        
-      case "track"    => context.actorOf(Props(new BaseTracker(Configuration)))
+      case "index"    => context.actorOf(Props(new BaseIndexer(ctx.config)))        
+      case "track"    => context.actorOf(Props(new BaseTracker(ctx.config)))
 
-      case "params"   => context.actorOf(Props(new ParamQuestor(Configuration)))
+      case "params"   => context.actorOf(Props(new ParamQuestor(ctx.config)))
 
-      case "status"   => context.actorOf(Props(new StatusQuestor(Configuration)))
-      case "train"    => context.actorOf(Props(new FMBuilder(sc)))
+      case "status"   => context.actorOf(Props(new StatusQuestor(ctx.config)))
+      case "train"    => context.actorOf(Props(new FMBuilder(ctx)))
 
-      case "predict"  => context.actorOf(Props(new FMPredictor(sc))) 
-      case "similar"  => context.actorOf(Props(new FMSimilar(sc))) 
+      case "predict"  => context.actorOf(Props(new FMPredictor(ctx))) 
+      case "similar"  => context.actorOf(Props(new FMSimilar(ctx))) 
        
       case _ => null
       

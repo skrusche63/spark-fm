@@ -22,13 +22,13 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
 
 /**
- * A SparseVector is an in-memory optimization for arrays, which contain 
+ * An FMVector is an in-memory optimization for arrays, which contain 
  * only few values other than zero. 
  * 
  * HashMap based implementations are not recommended as performance is 
  * 3 to 4 times slower than an original array
  */
-class SparseVector(size:Int) extends Serializable {
+class FMVector(size:Int) extends Serializable {
 	
   /**
    * Linked arrays for indexes and values

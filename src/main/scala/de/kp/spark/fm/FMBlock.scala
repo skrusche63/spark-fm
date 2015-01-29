@@ -18,32 +18,8 @@ package de.kp.spark.fm
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{ActorSystem,Props}
-import com.typesafe.config.ConfigFactory
-
-import de.kp.spark.core.SparkService
-import de.kp.spark.fm.api.AkkaApi
-
-object FMService extends SparkService{
-  
-  private val sc = createCtxLocal("FMContext",Configuration.spark)      
-
-  def main(args: Array[String]) {
-    
-    val ctx = new RequestContext(sc)
-    
-    /**
-     * AKKA API 
-     */
-    val conf:String = "server.conf"
-
-    val akkaSystem = ActorSystem("akka-server",ConfigFactory.load(conf))
-    sys.addShutdownHook(akkaSystem.shutdown)
-    
-    new AkkaApi(akkaSystem,ctx).start()
- 
-    println("AKKA API activated.")
-      
-  }
-
-}
+/**
+ * FMBlock specifies metadata that describe a certain 
+ * feature block in the vector of predictor variables 
+ */
+case class FMBlock(category:String,begin:Long,end:Long)

@@ -18,7 +18,6 @@ package de.kp.spark.fm.source
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.Names
@@ -26,41 +25,38 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 import de.kp.spark.core.source._
 
-import de.kp.spark.fm.{Configuration,SparseVector}
+import de.kp.spark.fm._
 import de.kp.spark.fm.model._
 
 import de.kp.spark.fm.spec.{Fields}
 
 /**
- * FeatureSource is an abstraction layer on top of the physical 
+ * TargetedPointSource is an abstraction layer on top of the physical 
  * data sources supported by FM; the data format is that of a 
  * targeted point, which combines a feature (Double) vector of 
  * variables and a target (Double) variable
  */
-class FeatureSource(@transient sc:SparkContext) {
+class TargetedPointSource(@transient ctx:RequestContext) {
 
-  private val config = Configuration
-  private val model = new FeatureModel(sc)
+  private val config = ctx.config
+  private val model = new TargetedPointModel(ctx)
   
-  def get(req:ServiceRequest):RDD[(Int,(Double,SparseVector))] = {
-        
-    val uid = req.data(Names.REQ_UID)
-    val partitions = req.data("num_partitions").toInt
-
+  def get(req:ServiceRequest):(Seq[FMBlock],RDD[(Double,FMVector)]) = {
+ 
     val source = req.data(Names.REQ_SOURCE)
     source match {
 
       case Sources.ELASTIC => {
        
-       val rawset = new ElasticSource(sc).connect(config,req)
-       model.buildElastic(req,rawset,partitions)
+       val rawset = new ElasticSource(ctx.sc).connect(config,req)
+       model.buildElastic(req,rawset)
        
       }
  
       case Sources.FILE => {
        
-        val rawset = new FileSource(sc).connect(config.input(0),req)
-        model.buildFile(req,rawset,partitions)
+        val rawset = new FileSource(ctx.sc).connect(config.input(0),req)
+        model.buildFile(req,rawset)
         
       }
 
@@ -68,15 +64,15 @@ class FeatureSource(@transient sc:SparkContext) {
     
         val fields = Fields.get(req).map(kv => kv._2).toList  
         
-        val rawset = new JdbcSource(sc).connect(config,req,fields)
-        model.buildJDBC(req,rawset,partitions)
+        val rawset = new JdbcSource(ctx.sc).connect(config,req,fields)
+        model.buildJDBC(req,rawset)
 
       }
 
       case Sources.PARQUET => {
         
-        val rawset = new ParquetSource(sc).connect(config.input(0),req)
-        model.buildParquet(req,rawset,partitions)
+        val rawset = new ParquetSource(ctx.sc).connect(config.input(0),req)
+        model.buildParquet(req,rawset)
 
       }
       
