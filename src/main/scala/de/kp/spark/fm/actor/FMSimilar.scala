@@ -123,21 +123,6 @@ class FMSimilar(@transient ctx:RequestContext) extends BaseActor {
        * of provided column positions
        */
       req.data(Names.REQ_COLUMNS).split(",").map(_.toInt).toList
-  
-    } else if (req.data.contains(Names.REQ_FIELDS)) {
-      /*
-       * The feature block has to be determined from a list
-       * of provided field names
-       */
-      val names = req.data(Names.REQ_FIELDS).split(",").toList
-      /*
-       * As a next step the (internal) column or feature index is retrieved;
-       * to this end, that field specification must be used from the cache
-       */
-      val fields = cache.fields(req)   
-      val zipped = fields.zipWithIndex.map(x => (x._2,x._1.name))
-     
-      zipped.filter(x => names.contains(x._2)).map(_._1).toList
     
     } else if (req.data.contains(Names.REQ_START) && req.data.contains(Names.REQ_END)) {
 

@@ -30,6 +30,10 @@ import de.kp.spark.fm._
 import de.kp.spark.fm.model._
 import de.kp.spark.fm.source.TargetedPointSource
 
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.distributed.{MatrixEntry, RowMatrix}
+
+
 class ModelActor(@transient ctx:RequestContext) extends BaseActor {
   
   private val base = ctx.config.model
@@ -69,6 +73,19 @@ class ModelActor(@transient ctx:RequestContext) extends BaseActor {
   
   private def train(req:ServiceRequest) {
 
+    /* Register status */
+    cache.addStatus(req,FMStatus.TRAINING_STARTED)
+    
+    val (c,v,m) = buildPolynom(req)
+    buildMatrix(req,m)
+    
+    /* Update cache */
+    cache.addStatus(req,FMStatus.TRAINING_FINISHED)
+    
+  }
+  
+  private def buildPolynom(req:ServiceRequest):(Double,DenseVector,DenseMatrix) = {
+   
     /*
      * The training request must provide a name for the factorization or 
      * polynom model to uniquely distinguish this model from all others
@@ -76,34 +93,79 @@ class ModelActor(@transient ctx:RequestContext) extends BaseActor {
     val name = if (req.data.contains(Names.REQ_NAME)) req.data(Names.REQ_NAME) 
       else throw new Exception("No name for factorization model provided.")
 
-    /* Register status */
-    cache.addStatus(req,FMStatus.MODEL_TRAINING_STARTED)
-                   
+    /*
+     * STEP #1: Retrieve targeted data points from specified data source;
+     * note, that the recommended data source is parquet
+     */
     val (blocks,points) = new TargetedPointSource(ctx).get(req)
-
+    /*
+     * STEP #2: Train factorization machine and retrieve the respective
+     * polynom coefficients, c, v, m
+     */
     val fm = new FM(ctx)
-    /* Train polynom (model) */
     val (c,v,m) = fm.trainFromRDD(points,req.data)
-
-    /* Determine error */
-    val rsme = fm.calculateRSME(req,c,v,m,points)
-    
+    /*
+     * STEP #3: Calculate the root mean sequred error RMSE
+     */
+    val rmse = fm.calculateRMSE(req.data, c, v, m, points)
+    /*
+     * STEP #4: Save the factorization machine model (polynom)
+     * on the file system and put respective store to REDIS
+     */
     val now = new Date()
     val store = String.format("""%s/model/%s/%s""",base,name,now.getTime().toString)
     
-    /* Save polynom in directory of file system */
     val p = req.data
-    FMUtil.writeModel(store, c, v, m, p, blocks)
-    
-    /* Put path to polynom to Redis sink */
+   
+    FMUtil.writeModel(store, c, v, m, p, rmse, blocks)    
     sink.addModel(req,store)
-         
-    /* Update cache */
-    cache.addStatus(req,FMStatus.MODEL_TRAINING_FINISHED)
+    /*
+     * Return polynom parameters to enable similarity 
+     * matrix computation
+     */
+    (c,v,m)
     
-    /* Notify potential listeners */
-    notify(req,FMStatus.MODEL_TRAINING_FINISHED)
+  }
+  
+  /**
+   * The interaction matrix is a (factor x features) matrix, where each row
+   * specifies a certain latent factor and a column determines the engagement
+   * with these latent factors; we there need to compute the column similarity 
+   */
+  private def buildMatrix(req:ServiceRequest,interaction:DenseMatrix) {
+   
+    val name = if (req.data.contains(Names.REQ_NAME)) req.data(Names.REQ_NAME) 
+      else throw new Exception("No name for factorization model provided.")
+
+    /*
+     * STEP #1: Transform interaction matrix into RowMatrix
+     * and calculate column similarity
+     */
+    val rows = (0 until interaction.rdim).map(i => Vectors.dense(interaction.getRow(i)))
+    val mat = new RowMatrix(ctx.sc.parallelize(rows))
+
+    val sim = mat.columnSimilarities()
     
+    val rdim = sim.numRows.toInt
+    val cdim = sim.numCols.toInt
+    
+    require (rdim == cdim)
+    /*
+     * STEP #2: Transform similarities into DenseMatrix to optimize
+     * usage of similarity data
+     */
+    val matrix = new DenseMatrix(rdim,cdim)
+    sim.entries.collect().foreach{case MatrixEntry(i,j,u) => matrix.update(i.toInt,j.toInt,u)}    
+    /*
+     * STEP #3: Serialize and save correlation matrix; the base 
+     * path extended by matrix name and current timestamp
+     */
+    val now = new java.util.Date()
+    val store = String.format("""%s/matrix/%s/%s""",base,name,now.getTime().toString)
+    
+    FMUtil.writeMatrix(store,matrix)
+    sink.addMatrix(req,store)
+     
   }
   
   private def properties(req:ServiceRequest):Boolean = {
@@ -147,8 +209,8 @@ class ModelActor(@transient ctx:RequestContext) extends BaseActor {
       new ServiceResponse(req.service,req.task,data,FMStatus.FAILURE)	
   
     } else {
-      val data = Map("message" -> Messages.MODEL_TRAINING_STARTED(uid)) ++ req.data
-      new ServiceResponse(req.service,req.task,data,FMStatus.MODEL_TRAINING_STARTED)	
+      val data = Map("message" -> Messages.TRAINING_STARTED(uid)) ++ req.data
+      new ServiceResponse(req.service,req.task,data,FMStatus.TRAINING_STARTED)	
   
     }
 

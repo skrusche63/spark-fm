@@ -48,73 +48,32 @@ class FMBuilder(@transient val ctx:RequestContext) extends BaseTrainer(ctx.confi
   override def validate(req:ServiceRequest):Option[String] = {
 
     val uid = req.data(Names.REQ_UID)
-    val Array(task,topic) = req.task.split(":")
+    /*
+     * This is the starting point for all training tasks that
+     * refer to an already existing factorization or polynom
+     * model
+     */
+    if (cache.statusExists(req)) {            
+      return Some(messages.TASK_ALREADY_STARTED(uid))   
+    }
     
-    topic match {
-      
-      case "matrix" => {
-        /*
-         * This is a training task that builds a correlation
-         * matrix on top of a factorization or polynom model.
-         * 
-         * It must be ensured that the respective model the
-         * previous model build task is finished
-         */
-        if (cache.statusExists(req) == false) {
-          return Some(messages.TASK_DOES_NOT_EXIST(uid))   
-        }
+    req.data.get(Names.REQ_SOURCE) match {
         
-        if (cache.status(req) != FMStatus.TRAINING_FINISHED) {
-          return Some(messages.TRAINING_NOT_FINISHED(uid)) 
-        }
+      case None => return Some(messages.NO_SOURCE_PROVIDED(uid))       
         
-      }
-      
-      case "model" => {
-        /*
-         * This is the starting point for all training tasks that
-         * refer to an already existing factorization or polynom
-         * model
-         */
-        if (cache.statusExists(req)) {            
-          return Some(messages.TASK_ALREADY_STARTED(uid))   
-        }
-    
-        req.data.get(Names.REQ_SOURCE) match {
-        
-          case None => return Some(messages.NO_SOURCE_PROVIDED(uid))       
-        
-          case Some(source) => {
-            if (Sources.isSource(source) == false) {
-              return Some(messages.SOURCE_IS_UNKNOWN(uid,source))    
-            }          
+      case Some(source) => {
+        if (Sources.isSource(source) == false) {
+          return Some(messages.SOURCE_IS_UNKNOWN(uid,source))    
+        }          
           
-          }
-        
-        }
-        
       }
-      
-      case _ => return Some(messages.TASK_IS_UNKNOWN(uid, req.task))
-    
+        
     }
 
     None
     
   }
 
-  override def actor(req:ServiceRequest):ActorRef = {
-    
-    val Array(task,topic) = req.task.split(":")
-    topic match {
-      
-      case "matrix" => context.actorOf(Props(new MatrixActor(ctx)))
-      case "model"  => context.actorOf(Props(new ModelActor(ctx)))
-      
-      case _ => null
-      
-    }
-    
-  }
+  override def actor(req:ServiceRequest):ActorRef = context.actorOf(Props(new ModelActor(ctx)))
   
 }

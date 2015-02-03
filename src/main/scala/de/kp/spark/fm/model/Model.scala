@@ -53,12 +53,9 @@ object Sources {
 
 object Messages extends BaseMessages {
    
-  def MATRIX_TRAINING_STARTED(uid:String):String = 
-    String.format("""[UID: %s] Matrix training started.""", uid)
- 
-  def MODEL_TRAINING_STARTED(uid:String):String = 
-    String.format("""[UID: %s] Model training started.""", uid)
-   
+  def TRAINING_STARTED(uid:String):String = 
+    String.format("""[UID: %s] Training of factorization machine model started.""", uid)
+  
   def MATRIX_DOES_NOT_EXIST(uid:String):String = 
     String.format("""[UID: %s] Matrix does not exist.""", uid)
  

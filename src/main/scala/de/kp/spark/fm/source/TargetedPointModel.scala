@@ -168,8 +168,30 @@ class TargetedPointModel(@transient ctx:RequestContext) extends Serializable {
      * The following categories are supported:
      * 
      * - user
+     *   
+     *   this category describes the user part of feature vector
+     *   and requires a binary (0,1) specification of the user
+     *   
      * - item
-     * - context
+     * 
+     *   this category describes the item part of the feature vector
+     *   and requires a binary (0,1) specification of the item
+     * 
+     * - context_numerical
+     * 
+     *   this category describes a single column of the context vector
+     *   specifying a certain numerical value 
+     * 
+     * - context_categorical
+     * 
+     *   this category describes  a part of the context vector and
+     *   requires a binary (0,1) specification of the context
+     *   
+     * - context_categorical_set
+     * 
+     *   this category describes a part of the context vector that
+     *   describes sets of groups with weight factors that sum up to 1
+     * 
      * - label
      * 
      */

@@ -60,11 +60,10 @@ class FMPredictor(@transient ctx:RequestContext) extends BaseActor {
               
               try {
 
-                val (c,v,m,p,blocks) = FMUtil.readModel(path)
-                val fm = new FM(ctx)
-                  
                 val features = req.data(Names.REQ_FEATURES).split(",").map(_.toDouble)
-                val prediction = fm.predict(features, c, v, m, p).toString
+
+                val (c,v,m,p,rmse,blocks) = FMUtil.readModel(path)
+                val prediction = new FM(ctx).predict(features, c, v, m, p).toString
 
                 val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> prediction)
                 new ServiceResponse(req.service,req.task,data,FMStatus.SUCCESS)

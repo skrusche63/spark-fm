@@ -76,7 +76,7 @@ class FM(@transient ctx:RequestContext) extends Serializable {
     
   }
   
-  def calculateRSME(params:Map[String,String],c:Double,v:DenseVector,m:DenseMatrix):Double = {
+  def calculateRMSE(params:Map[String,String],c:Double,v:DenseVector,m:DenseMatrix):Double = {
     
     val dataset = params("dataset")
     
@@ -85,7 +85,7 @@ class FM(@transient ctx:RequestContext) extends Serializable {
 
     val file = ctx.sc.textFile(dataset)
     
-    val rsme = file.map(valu => {
+    val rmse = file.map(valu => {
 
       val parts = valu.split(',')
       
@@ -107,16 +107,16 @@ class FM(@transient ctx:RequestContext) extends Serializable {
       
     })
 
-    Math.sqrt(rsme.collect().sum / file.count())
+    Math.sqrt(rmse.collect().sum / file.count())
 
   }
   
-  def calculateRSME(req:ServiceRequest,c:Double,v:DenseVector,m:DenseMatrix,points:RDD[(Double,FMVector)]):Double = {
+  def calculateRMSE(params:Map[String,String],c:Double,v:DenseVector,m:DenseMatrix,points:RDD[(Double,FMVector)]):Double = {
     
-    val args = ctx.sc.broadcast(req.data)
+    val args = ctx.sc.broadcast(params)
     val model = ctx.sc.broadcast((c,v,m))
     
-    val rsme = points.map{case (target,vector) => {
+    val rmse = points.map{case (target,vector) => {
     
       val bargs  = args.value
       val bmodel = model.value 
@@ -133,7 +133,7 @@ class FM(@transient ctx:RequestContext) extends Serializable {
       
     }}
 
-    Math.sqrt(rsme.collect().sum / points.count())
+    Math.sqrt(rmse.collect().sum / points.count())
 
   }
   

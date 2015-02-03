@@ -65,7 +65,7 @@ object ExampleApp {
     /**
      * Determine error
      */
-    val rsme = fm.calculateRSME(args,c,v,m)
+    val rsme = fm.calculateRMSE(args,c,v,m)
     println("RMSE: " + rsme)
     
     val data = Array(1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0)
