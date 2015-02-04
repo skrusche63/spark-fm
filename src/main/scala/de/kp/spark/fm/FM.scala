@@ -24,25 +24,9 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.model._
-import de.kp.spark.core.source.FileSource
-
 import de.kp.spark.fm._
-import de.kp.spark.fm.source.TargetedPointModel
 
 class FM(@transient ctx:RequestContext) extends Serializable {
-
-  def trainFromFile(params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
-    
-    val model = new TargetedPointModel(ctx)
-    
-    val path = Configuration.input(0)
-    val rawset = new FileSource(ctx.sc).connect(path,null)
-
-    val (blocks,points) = model.buildFile(null,rawset)
-    
-    trainFromRDD(points,params)
-    
-  }
   
   def trainFromRDD(points:RDD[(Double,FMVector)],params:Map[String,String]):(Double,DenseVector,DenseMatrix) = {
 

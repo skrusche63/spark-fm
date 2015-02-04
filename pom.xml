@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>spark-fm</groupId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <name>Spark-FM</name>
   <description>This is an implementation of Factorization Machines by Steffen Rendle (2012) based on Scala and Apache Spark.</description>
   <inceptionYear>2010</inceptionYear>

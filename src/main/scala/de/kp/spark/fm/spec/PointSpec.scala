@@ -21,12 +21,13 @@ package de.kp.spark.fm.spec
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisCache
 
+import de.kp.spark.core.spec.Fields
 import de.kp.spark.fm.Configuration
 
 import scala.xml._
 import scala.collection.mutable.HashMap
 
-object Fields extends Serializable {
+object PointSpec extends Fields {
   
   val path = "features.xml"
 

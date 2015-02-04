@@ -25,10 +25,12 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisDB
 
+import de.kp.spark.core.source.PointSource
+
 import de.kp.spark.fm._
 
 import de.kp.spark.fm.model._
-import de.kp.spark.fm.source.TargetedPointSource
+import de.kp.spark.fm.spec.PointSpec
 
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.{MatrixEntry, RowMatrix}
@@ -97,7 +99,8 @@ class ModelActor(@transient ctx:RequestContext) extends BaseActor {
      * STEP #1: Retrieve targeted data points from specified data source;
      * note, that the recommended data source is parquet
      */
-    val (blocks,points) = new TargetedPointSource(ctx).get(req)
+    val source = new PointSource(ctx.sc,ctx.config,PointSpec)
+    val (blocks,points) = FMFormatter.format(source.connect(req))
     /*
      * STEP #2: Train factorization machine and retrieve the respective
      * polynom coefficients, c, v, m
