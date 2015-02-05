@@ -69,6 +69,16 @@ object Configuration extends CoreConf {
     cfg.getString("base")   
     
   }
+ 
+  override def mongo:HConf = {
+   
+    val cfg = config.getConfig("mongo")
+    val conf = new HConf()                          
+
+    conf.set("mongo.input.uri",cfg.getString("mongo.input.uri"))
+    conf
+     
+  }
 
   override def mysql:(String,String,String,String) = {
 
