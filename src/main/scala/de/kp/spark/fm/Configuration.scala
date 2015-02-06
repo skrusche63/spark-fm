@@ -40,6 +40,17 @@ object Configuration extends CoreConf {
     (duration,retries,timeout)
     
   }
+ 
+  override def cassandra:Map[String,String] = {
+   
+    val cfg = config.getConfig("cassandra")
+    val conf = Map(
+      "spark.cassandra.connection.host" -> cfg.getString("spark.cassandra.connection.host")
+    )                          
+
+    conf
+     
+  }
 
   override def elastic:HConf = {
   
