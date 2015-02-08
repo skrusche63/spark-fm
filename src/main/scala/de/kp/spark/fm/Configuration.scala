@@ -66,6 +66,17 @@ object Configuration extends CoreConf {
     conf
     
   }
+
+  override def hbase:Map[String,String] = {
+   
+    val cfg = config.getConfig("hbase")
+    val conf = Map(
+      "spark.hbase.host" -> cfg.getString("spark.hbase.host")
+    )                          
+
+    conf
+     
+  }
    
   override def input:List[String] = {
   
