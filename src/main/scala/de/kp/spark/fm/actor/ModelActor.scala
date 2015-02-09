@@ -99,7 +99,7 @@ class ModelActor(@transient ctx:RequestContext) extends BaseActor {
      * STEP #1: Retrieve targeted data points from specified data source;
      * note, that the recommended data source is parquet
      */
-    val source = new PointSource(ctx.sc,ctx.config,PointSpec)
+    val source = new PointSource(ctx.sc,ctx.config,new PointSpec(req))
     val (blocks,points) = FMFormatter.format(source.connect(req))
     /*
      * STEP #2: Train factorization machine and retrieve the respective
